@@ -161,7 +161,143 @@ using alias = NamespaceName;
 | 析构函数 | 析构函数或终结器的语法类似于构造函数的语法，但是在CLR检测到不再需要某个对象时调用它。它们的名称与类相同，但前面有一个“～”符号。不可能预测什么时候调用终结器。终结器详见第5章 |
 | 类型     | 类可以包含内部类。如果内部类型只和外部类型结合使用，就很有趣 |
 
-​                                               
+## 2.1 属性
 
 属性（property）的概念是：它是一个方法或一对方法，在客户端代码看来，它（们）是一个字段。
+
+1．自动实现的属性 如果属性的set和get访问器中没有任何逻辑，就可以使用自动实现的属性。这种属性会自动实现后备成员变量。
+
+示例的代码如下： 
+
+```C#
+public int Age { get; set; }
+```
+
+这种方法后备成员变量就不知道是啥名。
+
+自动实现的属性可以使用属性初始化器来初始化：示例代码如下：
+
+```C#
+public int Age { get; set; } = 42;
+```
+
+2．属性的访问修饰符 C#允许给属性的get和set访问器设置不同的访问修饰符，所以属性可以有公有的get访问器和私有或受保护的set访问器。
+
+```C#
+public string Name { get { return _name; } private set { _name = value; } } 
+```
+
+通过自动实现的属性，也可以设置不同的访问级别： 
+
+```C#
+public int Age { get; private set; }
+```
+
+**Note:属性默认的访问属性就是public，因此不能用public修饰，并且两个不能同时不为public访问属性，否则会编译报错**
+
+## 2.2 方法
+
+注意，正式的C#术语区分函数和方法。在C#术语中，“函数成员”不仅包含方法，也包含类或结构的一些非数据成员，如索引器、运算符、构造函数和析构函数等，甚至还有属性。这些都不是数据成员，字段、常量和事件才是数据成员。
+2．表达式体方法
+
+方法声明：
+
+```C#
+[modifiers] return_type MethodName([parameters]) { // Method body }
+```
+
+2．表达式体方法
+
+如果方法的实现只有一个语句，C# 6为方法定义提供了一个简化的语法：表达式体方法。使用新的语法，不需要编写花括号和return关键字，而使用运算符= >（lambda操作符）区分操作符左边的声明和操作符右边的实现代码。
+
+```C#
+public bool IsSquare(Rectangle rect) => rect.Height == rect.Width;
+```
+
+4．方法的重载 C#支持方法的重载——方法的几个版本有不同的签名（即，方法名相同，但参数的个数和/或数据类型不同）。为了重载方法，只需要声明同名但参数个数或类型不同的方法即可。
+
+6．可选参数，参数也可以是可选的。必须为可选参数提供默认值。可选参数还必须是方法定义的最后的参数。
+
+```C#
+public void TestMethod(int notOptionalNumber, int optionalNumber = 42) { WriteLine(optionalNumber + notOptionalNumber); }
+```
+
+通过多个可选参数，命名参数的特性就会发挥作用。使用命名参数，可以传递任何可选参数，例如，下面的例子仅传递最后一个参数： 
+
+```C#
+public void TestMethod(int n, int opt1 = 11 , int opt2 = 22 , int opt3 = 33 ) { WriteLine(n + opt1 + opt2 + opt3); }
+TestMethod(1, opt3: 4);
+```
+
+7．个数可变的参数 使用可选参数，可以定义数量可变的参数。然而，还有另一种语法允许传递数量可变的参数——这个语法没有版本控制问题。 声明数组类型的参数（示例代码使用一个int数组），添加params关键字，就可以使用任意数量的int参数调用该方法。 
+
+```C#
+public void AnyNumberOfArguments(params int[] data) { foreach (var x in data) { WriteLine(x); } }
+```
+
+**如果params关键字与方法签名定义的多个参数一起使用，则params只能使用一次，而且它必须是最后一个参数**
+
+
+
+## 2.3 构造函数
+
+没有必要给类提供构造函数，到目前为止本书的例子中没有提供这样的构造函数。一般情况下，如果没有提供任何构造函数，编译器会在后台生成一个默认的构造函数。**<u>*这是一个非常基本的构造函数，它只能把所有的成员字段初始化为标准的默认值（例如，引用类型为空引用，数值数据类型为0, bool为false）。这通常就足够了，否则就需要编写自己的构造函数。*</u>** 
+
+**<u>*但是，如果提供了带参数的构造函数，编译器就不会自动提供默认的构造函数。只有在没有定义任何构造函数时，编译器才会自动提供默认的构造函数。*</u>**
+
+构造函数的重载遵循与其他方法相同的规则。换言之，可以为构造函数提供任意多的重载，只要它们的签名有明显的区别即可。
+
+● 类仅用作某些静态成员或属性的容器，因此永远不会实例化它。在这种情况下，可以用static修饰符声明类。使用这个修饰符，类只能包含静态成员，不能实例化。 
+● 希望类仅通过调用某个静态成员函数来实例化（这就是所谓对象实例化的类工厂方法）。单例模式的实现如下面的代码片段所示：
+
+```C#
+public class Singleton { 
+    private static Singleton s_instance; 
+    private int _state; private Singleton(int state) { _state = state; } 
+    public static Singleton Instance { get { return s_instance ? ? (s_instance = new MySingleton(42); } } 
+}
+```
+
+**<u>*类中的数据成员即便不在定义的构造函数里初始化，也会变初始化标准的默认值（例如，引用类型为空引用，数值数据类型为0, bool为false）*</u>**
+
+### 2.3.1 从构造函数中调用其他构造函数
+
+省事
+
+```C#
+class Car { 
+    private string _description; 
+    private uint _nWheels; 
+    public Car(string description, uint nWheels) { 
+        _description = description;
+        _nWheels = nWheels; 
+    } 
+    public Car(string description) { 
+        _description = description; 
+        _nWheels = 4; 
+    } // etc.
+}
+//优化如下
+class Car { 
+    private string _description; 
+    private uint _nWheels; 
+    public Car(string description, uint nWheels) { 
+        _description = description; 
+        _nWheels = nWheels; 
+    } 
+    public Car(string description): this (description, 4) { } // etc
+}
+```
+
+### 2.3.2 静态构造函数
+
+**<u>*C#的一个新特征是也可以给类编写无参数的静态构造函数。这种构造函数只执行一次，而前面的构造函数是实例构造函数，只要创建类的对象，就会执行它。*</u>**
+
+编写静态构造函数的一个原因是，类有一些静态字段或属性，需要在第一次使用类之前，从外部源中初始化这些静态字段和属性。
+
+**<u>*.NET运行库没有确保什么时候执行静态构造函数，所以不应把要求在某个特定时刻（例如，加载程序集时）执行的代码放在静态构造函数中。也不能预计不同类的静态构造函数按照什么顺序执行。但是，可以确保静态构造函数至多运行一次，即在代码引用类之前调用它。在C#中，通常在第一次调用类的任何成员之前执行静态构造函数。*</u>**
+
+
+
+<u>***注意，静态构造函数没有访问修饰符，其他C#代码从来不显式调用它，但在加载类时，总是由.NET运行库调用它，所以像public或private这样的访问修饰符就没有任何意义。出于同样原因，静态构造函数不能带任何参数，一个类也只能有一个静态构造函数。很显然，静态构造函数只能访问类的静态成员，不能访问类的实例成员。***</u>
 
