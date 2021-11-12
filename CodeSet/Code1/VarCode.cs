@@ -3,10 +3,10 @@ namespace myLearn_11_10 {
     using System;
     using System.Linq.Expressions;
     class Program { 
-        static void Main() 
-        { 
-            my_varClass.run();
-        } 
+        // static void Main() 
+        // { 
+        //     my_varClass.run();
+        // } 
     }
     class my_class{
         private int m_a;
