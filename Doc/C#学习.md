@@ -301,3 +301,196 @@ class Car {
 
 <u>***注意，静态构造函数没有访问修饰符，其他C#代码从来不显式调用它，但在加载类时，总是由.NET运行库调用它，所以像public或private这样的访问修饰符就没有任何意义。出于同样原因，静态构造函数不能带任何参数，一个类也只能有一个静态构造函数。很显然，静态构造函数只能访问类的静态成员，不能访问类的实例成员。***</u>
 
+## 2.4 匿名类型
+
+var关键字，它用于表示隐式类型化的变量。var与new关键字一起使用时，可以创建匿名类型。匿名类型只是一个继承自Object且没有名称的类。**<u>该类的定义从初始化器中推断，类似于隐式类型化的变量。</u>**
+
+如果所设置的值来自于另一个对象，就可以简化初始化器。如果已经有一个包含FirstName、MiddleName和LastName属性的类，且有该类的一个实例（person）, captain对象就可以初始化为： 
+
+```C#
+var captain = new { person.FirstName, person.MiddleName, person.LastName }; 
+```
+
+person对象的属性名应投射到新对象名captain，所以captain对象应有FirstName、MiddleName和LastName属性。
+
+**<u>*这些新对象的类型名未知。编译器为类型“伪造”了一个名称，但只有编译器才能使用它。我们不能也不应使用新对象上的任何类型反射，因为这不会得到一致的结果。*</u>**
+
+## 2.5 结构
+
+
+
+结构是值类型，不是引用类型。**<u>*它们存储在栈中或存储为内联（如果它们是存储在堆中的另一个对象的一部分）*</u>**，其生存期的限制与简单的数据类型一样。 
+
+● 结构不支持继承。 
+● 对于结构，构造函数的工作方式有一些区别。如果没有提供默认的构造函数，编译器会自动提供一个，把成员初始化为其默认值。 
+● 使用结构，可以指定字段如何在内存中布局
+
+
+
+因为结构实际上是把数据项组合在一起，所以有时大多数或者全部字段都声明为public。**<u>*严格来说，这与编写.NET代码的规则相反——根据Microsoft，字段（除了const字段之外）应总是私有的，并由公有属性封装。*</u>**但是，对于简单的结构，许多开发人员都认为公有字段是可接受的编程方式。
+
+
+### 2.5.1 结构是值类型
+
+注意，因为结构是值类型，所以new运算符与类和其他引用类型的工作方式不同。**<u>*new运算符并不分配堆中的内存，而是只调用相应的构造函数，根据传送给它的参数，初始化所有的字段*</u>**。对于结构，可以编写下述完全合法的代码：
+
+```C#
+Dimensions point; 
+point.Length = 3; 
+point.Width = 6; 
+```
+
+**<u>*结构遵循其他数据类型都遵循的规则：在使用前所有的元素都必须进行初始化。*</u>**在结构上调用new运算符，或者给所有的字段分别赋值，结构就完全初始化了。当然，如果结构定义为类的成员字段，在初始化包含的对象时，该结构会自动初始化为0。
+
+<u>***NOTE:在net6.0环境下，这种代码无法通过编译，最好还是先初始化对象再进行使用。***</u>
+
+结构不是为继承设计的。这意味着：**<u>*它不能从一个结构中继承。唯一的例外是对应的结构（和C#中的其他类型一样）最终派生于类System.Object。因此，结构也可以访问System.Object的方法。在结构中，甚至可以重写System.Object中的方法——如重写ToString（）方法。结构的继承链是：每个结构派生自System.ValueType类，System.ValueType类又派生自System.Object。ValueType并没有给Object添加任何新成员，但提供了一些更适合结构的实现方式。注意，不能为结构提供其他基类：每个结构都派生自ValueType。*</u>** 
+
+为结构定义构造函数的方式与为类定义构造函数的方式相同。 前面说过，默认构造函数把数值字段都初始化为0，且总是隐式地给出，即使提供了其他带参数的构造函数，也是如此。
+
+## 2.6 按值和引用传递参数
+
+结构按值传递，通过按值传递。类按引用传递。
+
+```C#
+public struct Dimensions { 
+    public double Length { get; set; }
+    public double Width { get; set; } 
+    public Dimensions(double length, double width) { Length = length; Width = width; } 
+    //表达式属性,返回了Math.Sqrt(Length * Length + Width * Width)
+    public double Diagonal => Math.Sqrt(Length * Length + Width * Width); 
+}
+public class Dimensions1 { 
+    public double Length { get; set; }
+    public double Width { get; set; } 
+    public Dimensions1(double length, double width) { Length = length; Width = width; } 
+    //表达式属性,返回了Math.Sqrt(Length * Length + Width * Width)
+    public double Diagonal => Math.Sqrt(Length * Length + Width * Width); 
+}
+public static void ChangeValue(Dimensions a){
+    a.Length = 100;
+}
+public static void ChangeValue(Dimensions1 a){
+    a.Length = 100;
+}
+Dimensions d1 = new Dimensions(10,10);
+Dimensions1 d2 = new Dimensions1(0,0);
+//d1为结构体，d2为类，d1为值传递，d2为引用传递
+ChangeValue(d1);
+ChangeValue(d2);
+Console.WriteLine($"d1.Length:{d1.Length}");
+Console.WriteLine($"d2.Length:{d2.Length}");
+//输出
+//d1.Length:10
+//d2.Length:100
+```
+
+### 2.6.1 ref参数
+
+也可以通过引用传递结构。如果A是结构类型，就添加ref修饰符，方法的声明，通过引用传递变量。在调用方法时需要添加它。
+
+对于引用类型，如果要在函数中创建新对象并更改原先的引用，需要添加ref修饰符。
+
+```C#
+ public static void ChangeValue(Dimensions1 a){
+     a.Length = 100;
+     a = new Dimensions1(1001,1001);
+ }
+public static void ChangeValue(ref Dimensions1 a){
+    a.Length = 1000;
+    a = new Dimensions1(10000,10000);
+}
+```
+
+### 2.6.2　out参数
+
+如果方法返回一个值，该方法通常声明返回类型，并返回结果。<u>如果方法返回多个值，可能类型还不同，该怎么办？</u>这有不同的选项。**<u>*一个选项是声明类和结构，把应该返回的所有信息都定义为该类型的成员。另一个选项是使用元组类型。第三个选项是使用out关键字。*</u>**
+
+使用out参数，变量不需要预先初始化，变量在方法中初始化。类似于ref关键字，out关键字也需要在调用方法时提供，而不仅仅在声明方法时提供。
+
+使用示例：
+
+```C#
+string input2 = Console.ReadLine(); 
+int result; 
+if (int.TryParse(input2, out result) ) 
+{ 
+    Console.WriteLine($"n: {result}"); 
+} 
+else 
+{ 
+    Console.WriteLine("not a number"); 
+}
+```
+
+## 2.7 可空类型
+
+可空类型是可以为空的值类型。可空类型只需要在类型的后面添加“？”（它必须是结构）。与基本结构相比，值类型唯一的开销是一个可以确定它是否为空的布尔成员。（勘误，应该是可空类型的唯一开销）。
+
+**对于可空类型，可以使用能用于基本类型的所有可用操作符，例如，可用于int？的+、-、*、/等。每个结构类型都可以使用可空类型，而不仅是预定义的C#类型。**
+
+## 2.8 枚举类型
+
+枚举是一个值类型，包含一组命名的常量，如这里的Color类型。枚举类型用enum关键字定义
+
+```C#
+ public enum Color { Red, Green, Blue }
+```
+
+默认情况下，enum的类型是int。这个基本类型可以改为其他整数类型（byte、short、int、带符号的long和无符号变量）。命名常量的值从0开始递增，但它们可以改为其他值：
+
+```C#
+public enum Color : short { Red = 1, Green = 2, Blue = 3 }
+```
+
+使用强制类型转换可以把数字改为枚举值，把枚举值改为数字。(不使用强制类型转换可以转换嘛？无法隐式转换，必须强制类型转换)
+
+
+
+**<u>*还可以使用enum类型把多个选项分配给一个变量，而不仅仅是一个枚举常量。为此，分配给常量的值必须是不同的位，Flags属性需要用枚举设置。*</u>**
+
+```C#
+[Flags] public enum DaysOfWeek { 
+    Monday = 0x1, Tuesday = 0x2, Wednesday = 0x4, Thursday = 0x8, Friday = 0x10, Saturday = 0x20, Sunday = 0x40 
+}
+```
+
+
+
+设置不同的位，也可以结合单个位来包括多个值，如Weekend的值0x60是用逻辑或运算符结合了Saturday和Sunday。Workday则结合了从Monday到Friday的所有日子，AllWeek用逻辑或运算符结合了Workday和Weekend 
+
+Enum.GetNames方法返回一个包含所有枚举名的字符串数组。
+
+为了获得枚举的所有值，可以使用方法Enum.GetValues。Enum.GetValues返回枚举值的一个数组。为了获得整数值，需要把它转换为枚举的底层类型。
+
+## 2.9 部分类
+
+partial关键字允许把类、结构、方法或接口放在多个文件中。一般情况下，某种类型的代码生成器生成了一个类的某部分，所以把类放在多个文件中是有益的。假定要给类添加一些从工具中自动生成的内容。如果重新运行该工具，前面所做的修改就会丢失。partial关键字有助于把类分开放在两个文件中，而对不由代码生成器定义的文件进行修改。
+
+## 2.10 扩展方法
+
+有许多扩展类的方式。继承就是给对象添加功能的好方法。扩展方法是给对象添加功能的另一个选项，在不能使用继承时，也可以使用这个选项（例如类是密封的）。扩展方法是静态方法，它是类的一部分，但实际上没有放在类的源代码中。
+
+示例：
+
+```C#
+public static class StringExtension { 
+    public static int GetWordCount(this string s) => s.Split().Length; 
+}
+```
+
+**<u>*使用this关键字和第一个参数来扩展字符串。这个关键字定义了要扩展的类型。*</u>**
+
+使用：
+
+```C#
+string fox = "the quick brown fox jumped over the lazy dogs down " + "9876543210 times"; 
+int wordCount = fox.GetWordCount(); 
+WriteLine($"{wordCount} words");
+```
+
+**<u>*编译器如何找到某个类型的扩展方法？this关键字必须匹配类型的扩展方法，而且需要打开定义扩展方法的静态类所在的名称空间。如果把StringExtensions类放在名称空间Wrox. Extensions中，则只有用using指令打开Wrox.Extensions，编译器才能找到GetWordCount方法。如果类型还定义了同名的实例方法，扩展方法就永远不会使用。类中已有的任何实例方法都优先。当多个同名的扩展方法扩展相同的类型，打开所有这些类型的名称空间时，编译器会产生一个错误，指出调用是模棱两可的，它不能决定在多个实现代码中选择哪个。然而，如果调用代码在一个名称空间中，这个名称空间就优先。*</u>**
+
+## 2.11 Object类
+
+**<u>*前面提到，所有的.NET类最终都派生自System.Object。实际上，如果在定义类时没有指定基类，编译器就会自动假定这个类派生自Object。本章没有使用继承，所以前面介绍的每个类都派生自System.Object（如前所述，对于结构，这个派生是间接的：结构总是派生自System.ValueType, System.ValueType又派生自System.Object）。*</u>**
