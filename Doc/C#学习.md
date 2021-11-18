@@ -1058,9 +1058,193 @@ public static extern bool CreateHardLink(string newFileName, string existingFile
 | SetLastError        | 如果非托管函数使用Windows API SetLastError设置一个错误，就可以把SetLastError字段设置为true。这样，就可以使用Marshal. GetLastWin32Error读取后面的错误号 |
 |                     |                                                              |
 
-​                                                
+# 5. 泛型
+
+## 5.1 泛型及其相关概念
+
+### 5.1.1 泛型概念及其优缺点
+
+Language，中间语言）代码紧密地集成。有了泛型（Generic），就可以创建独立于被包含类型的类和方法。我们不必给不同的类型编写功能相同的许多方法或类，只创建一个方法或类即可。
+
+另一个减少代码的选项是使用Object类，但使用派生自Object类的类型进行传递不是**<u>*类型安全*</u>**的。泛型类使用泛型类型，并可以根据需要用特定的类型替换泛型类型。这就保证了类型安全性：如果某个类型不支持泛型类，编译器就会出现错误。
+
+**<u>*泛型不仅限于类，还可以用于接口和方法，委托。*</u>**
 
 
+
+泛型不仅存在于C#中，其他语言中有类似的概念。**<u>*例如，C++模板就与泛型相似。但是，C++模板和.NET泛型之间有一个很大的区别。对于C++模板，在用特定的类型实例化模板时，需要模板的源代码。相反，泛型不仅是C#语言的一种结构，而且是CLR（Common Language Runtime）定义的。所以，即使泛型类是在C#中定义的，也可以在Visual Basic中用一个特定的类型实例化该泛型。*</u>**
+
+泛型的优缺点：
+● 性能 
+● 类型安全性 
+● 二进制代码重用 
+● 代码的扩展 
+● 命名约定
+
+### 5.1.2 装箱与拆箱
+
+泛型的一个主要优点是性能。第11章介绍了System.Collections和System.Collections.Generic名称空间的泛型和非泛型集合类。对值类型使用非泛型集合类，在把值类型转换为引用类型，和把引用类型转换为值类型时，需要进行装箱和拆箱操作。
+
+装箱：
+值类型存储在栈上，引用类型存储在堆上。C#类是引用类型，结构是值类型。.NET很容易把值类型转换为引用类型，所以可以在需要对象（对象是引用类型）的任意地方使用值类型。例如，int可以赋予一个对象。**<u>*从值类型转换为引用类型称为装箱。*</u>**<u>如果方法需要把一个对象作为参数，同时传递一个值类型，装箱操作就会自动进行</u>。另一方面，装箱的值类型可以使用拆箱操作转换为值类型。在拆箱时，需要使用类型强制转换运算符。
+
+装箱：将值类型（如 int ，或自定义的值类型等）转换成 object 或者接口类型的一个过程。当 CLR 对值类型进行装箱时，会将该值包装为 System.Object 类型，再将包装后的对象存储在堆上。 拆箱就是从对象中提取对应的值类型的一个过程。
+
+装箱是隐式的；拆箱必定是显式的。
+
+[[C#\] C# 知识回顾 - 装箱与拆箱 - 反骨仔 - 博客园 (cnblogs.com)](https://www.cnblogs.com/liqingwen/p/6486332.html#:~:text=C%23 的装箱与拆箱 装箱：将值类型（如 int ，或自定义的值类型等）转换成 object,或者接口类型的一个过程。 当 CLR 对值类型进行装箱时，会将该值包装为 System.Object 类型，再将包装后的对象存储在堆上。)
+
+## 5.2 泛型类的创建
+
+模板如下：
+
+```C#
+public class LinkedListNode<T> { 
+    public LinkedListNode(T value) { Value = value; } 
+    public T Value { get; private set; } 
+    public LinkedListNode<T> Next { get; internal set; } 
+    public LinkedListNode<T> Prev { get; internal set; } 
+}
+public class LinkedList<T>: IEnumerable<T> { 
+    public LinkedListNode<T> First { get; private set; } 
+    public LinkedListNode<T> Last { get; private set; } 
+    public LinkedListNode<T> AddLast(T node) { 
+        var newNode = new LinkedListNode<T>(node); 
+        if (First == null) { First = newNode; Last = First; } 
+        else { LinkedListNode<T> previous = Last; 
+              Last.Next = newNode; Last = newNode; 
+              Last.Prev = previous; } return newNode; 
+    } 
+    public IEnumerator<T> GetEnumerator() { 
+        LinkedListNode<T> current = First; 
+        while (current != null) { 
+            yield return current.Value; 
+            current = current.Next; 
+        } 
+    } 
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator(); 
+}
+```
+
+创建泛型类其他的一些关键字。
+
+● 默认值 
+● 约束 
+● 继承 
+● 静态成员
+
+### 5.2.1 默认值 
+
+default关键字根据上下文可以有多种含义。switch语句使用default定义默认情况。在泛型中，取决于泛型类型是引用类型还是值类型，泛型default将泛型类型初始化为null或0。
+eg：
+
+```C#
+public T GetDocument() { 
+    T doc = default(T); 
+    lock (this) { 
+        doc = documentQueue.Dequeue(); 
+    } 
+    return doc; 
+}
+```
+
+### 5.2.2 约束
+
+限制泛型类的设置。
+
+```C#
+public class MyClass<T> where T: IFoo, new() { 
+    //...
+}
+```
+
+   
+
+| 约束              | 说明                                                  |
+| ----------------- | ----------------------------------------------------- |
+| where T : struct  | 对于结构约束，类型T必须是值类型                       |
+| where T : class   | 类约束指定类型T必须是引用类型                         |
+| where T : IFoo    | 指定类型T必须实现接口IFoo                             |
+| where T : Foo     | 指定类型T必须派生自基类Foo                            |
+| where T : new（） | 这是一个构造函数约束，指定类型T必须有一个默认构造函数 |
+| where T1 : T2     | 这个约束也可以指定，类型T1派生自泛型类型T2            |
+|                   |                                                       |
+
+   **<u>*注意： 只能为默认构造函数定义构造函数约束，不能为其他构造函数定义构造函数约束。*</u>**
+
+**<u>*注意： 在C#中，where子句的一个重要限制是，不能定义必须由泛型类型实现的运算符。运算符不能在接口中定义。在where子句中，只能定义基类、接口和默认构造函数。*</u>**
+
+### 5.2.3 继承
+
+前面创建的LinkedList<T>类实现了IEnumerable<T> 接口： 
+
+```C#
+public class LinkedList<T>: IEnumerable<T> { //... 泛型类型可以实现泛型接口，也可以派生自一个类。泛型类可以派生自泛型
+}
+```
+
+泛型类型可以实现泛型接口，也可以派生自一个类。泛型类可以派生自泛型基类：
+
+```C#
+public class Base<T> { } 
+public class Derived<T>: Base<T> { } 
+```
+
+**<u>*其要求是必须重复接口的泛型类型，或者必须指定基类的类型，如下例所示：*</u>**
+
+```C#
+public class Base<T> { } 
+public class Derived<T>: Base<string> { }
+```
+ 于是，派生类可以是泛型类或非泛型类。例如，可以定义一个抽象的泛型基类，它在派生类中用一个具体的类实现。这允许对特定类型执行特殊的操作：
+```C#
+public abstract class Calc<T> { 
+	public abstract T Add(T x, T y); 
+    public abstract T Sub(T x, T y); 
+} 
+public class IntCalc: Calc<int> { 
+    public override int Add(int x, int y) => x + y; 
+    public override int Sub(int x, int y) => x - y; 
+}
+```
+ 还可以创建一个部分的特殊操作，如从Query中派生StringQuery类，只定义一个泛型参数，如字符串TResult。要实例化StringQuery，只需要提供TRequest的类型： 
+
+```C#
+public class Query<TRequest, TResult> { } 
+public StringQuery<TRequest> : Query<TRequest, string> { }
+```
+
+### 5.2.4 静态成员
+
+泛型类的静态成员需要特别关注。**<u>*泛型类的静态成员只能在类的一个实例中共享。*</u>**
+
+## 5.3 泛型接口
+
+接口可以泛型。
+
+例如：
+
+```C#
+public interface IComparable<in T> { int CompareTo(T other); }
+```
+
+### 5.3.1 协变和抗变
+
+协变和抗变指对参数和返回值的类型进行转换。例如，可以给一个需要Shape参数的方法传送Rectangle参数吗？下面用示例说明这些扩展的优点。
+
+**<u>*在.NET中，参数类型是协变的。假定有Shape和Rectangle类，Rectangle派生自Shape基类。声明Display（）方法是为了接受Shape类型的对象作为其参数：*</u>**
+
+```C#
+public void Display(Shape o) { }
+```
+
+**<u>*现在可以传递派生自Shape基类的任意对象。因为Rectangle派生自Shape，所以Rectangle满足Shape的所有要求，编译器接受这个方法调用。*</u>**
+
+**<u>*方法的返回类型是抗变的。当方法返回一个Shape时，不能把它赋予Rectangle，因为Shape不一定总是Rectangle。*</u>**
+
+5.3.2 泛型接口的协变
+
+如果泛型类型用out关键字标注，泛型接口就是协变的。这也意味着返回类型只能是T。接口IIndex与类型T是协变的，并从一个只读索引器中返回这个类型（代码文件Variance/IIndex.cs）：
 
 
 
