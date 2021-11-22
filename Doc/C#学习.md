@@ -1242,11 +1242,53 @@ public void Display(Shape o) { }
 
 **<u>*方法的返回类型是抗变的。当方法返回一个Shape时，不能把它赋予Rectangle，因为Shape不一定总是Rectangle。*</u>**
 
-5.3.2 泛型接口的协变
-
-如果泛型类型用out关键字标注，泛型接口就是协变的。这也意味着返回类型只能是T。接口IIndex与类型T是协变的，并从一个只读索引器中返回这个类型（代码文件Variance/IIndex.cs）：
 
 
+**<u>*如果泛型类型用out关键字标注，泛型接口就是协变的。这也意味着返回类型只能是T。*</u>**
+
+**<u>*如果泛型类型用in关键字标注，泛型接口就是抗变的。这样，接口只能把泛型类型T用作其方法的输入。*</u>**
 
 
 
+
+
+## 5.4 泛型结构
+
+
+
+**<u>*与类相似，结构也可以是泛型的。它们非常类似于泛型类，只是没有继承特性。*</u>**
+
+实例：
+
+```C#
+public struct Nullable<T> where T: struct { 
+        public Nullable(T value) { _hasValue = true; _value = value; } 
+        private bool _hasValue; 
+        public bool HasValue => _hasValue; 
+        private T _value; 
+        public T Value { get { if (! _hasValue) { throw new InvalidOperationException("no value"); } return _value; } } 
+        //用户定义的强制类型转换操作符
+        public static explicit operator T(Nullable<T> value) {
+            System.Console.WriteLine("强制类型转换");
+            return value.Value;
+        }
+        public static implicit operator Nullable<T>(T value){
+            System.Console.WriteLine("隐式类型转换");
+            return new Nullable<T>(value);
+        } 
+        public override string ToString() => ! HasValue ? string.Empty : _value.ToString(); 
+    
+    }
+```
+
+## 5.5 泛型方法
+
+除了定义泛型类之外，还可以定义泛型方法。在泛型方法中，泛型类型用方法声明来定义。泛型方法可以在非泛型类中定义。
+
+但是，因为C#编译器会通过调用Swap（）方法来获取参数的类型，所以不需要把泛型类型赋予方法调用。泛型方法可以像非泛型方法那样调用。
+
+见例代码，泛型方法，可以省挺多事，还可以带约束，传递委托。
+
+泛型方法重载：
+
+**<u>*需要注意的是，所调用的方法是在编译期间而不是运行期间定义的。*</u>**

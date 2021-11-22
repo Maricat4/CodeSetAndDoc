@@ -34,6 +34,21 @@ namespace Generic
             {
                 System.Console.WriteLine(item);//不需要拆箱
             }
+
+            int t = 14;
+            Nullable<int> a = t;
+            t = (int)a;
+
+
+            var accounts = new List<Account>() { 
+                new Account("Christian", 1500), 
+                new Account("Stephanie", 2200), 
+                new Account("Angela", 1800), 
+                new Account("Matthias", 2400) };
+            decimal amount = Algorithms.AccumulateSimple(accounts);
+            decimal amount1 = Algorithms.Accumulate(accounts);
+            System.Console.WriteLine(amount);
+            System.Console.WriteLine(amount1);
         }
     }
 
@@ -94,5 +109,91 @@ namespace Generic
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator(); 
     }
 
+    // 协变与抗变
+    class baseC<T>
+    {
+        private int _id;
+    }
+    class c1<T>:baseC<T>,ITest<T>
+    {
+        public int Test(T a){
+            return 0;
+        }
+        public float Test1(T a){
+            return 0;
+        }
+    }
+
+    interface ITest<in T>{
+        int Test(T a);
+        float Test1(T a);
+    };
+    interface ITest1<out T>{
+        int Test(int a);
+        T Test1(int a);
+    };
+
+
+    public struct Nullable<T> where T: struct { 
+        public Nullable(T value) { _hasValue = true; _value = value; } 
+        private bool _hasValue; 
+        public bool HasValue => _hasValue; 
+        private T _value; 
+        public T Value { get { if (! _hasValue) { throw new InvalidOperationException("no value"); } return _value; } } 
+        //用户定义的强制类型转换操作符
+        public static explicit operator T(Nullable<T> value) {
+            System.Console.WriteLine("强制类型转换");
+            return value.Value;
+        }
+        public static implicit operator Nullable<T>(T value){
+            System.Console.WriteLine("隐式类型转换");
+            return new Nullable<T>(value);
+        } 
+        public override string ToString() => ! HasValue ? string.Empty : _value.ToString(); 
+    
+    }
+
+
+
+    public class Account:IAccount { 
+        public string Name { get; } 
+        public decimal Balance { get; private set; } 
+        public Account(string name, Decimal balance) { Name = name; Balance = balance; } 
+    }
+    public interface IAccount { decimal Balance { get; } string Name { get; } }
+    public static class Algorithms { 
+        public static decimal AccumulateSimple(IEnumerable<Account> source) { 
+            decimal sum = 0; 
+            foreach (Account a in source) { 
+                sum += a.Balance; 
+            } 
+            return sum; 
+        } 
+
+        public static decimal Accumulate<TAccount>(IEnumerable<TAccount> source) where TAccount: IAccount { 
+            decimal sum = 0; 
+            foreach (TAccount a in source) { 
+                sum += a.Balance; 
+            } 
+            return sum; 
+        }
+
+        public static T2 Accumulate1<T1, T2>(IEnumerable<T1> source, Func<T1, T2, T2> action) { 
+            T2 sum = default(T2); 
+            foreach (T1 item in source) { 
+                sum = action(item, sum); 
+            } 
+            return sum; 
+        }
+
+    }
+
+
+    public class MethodOverloads { 
+        public void Foo<T>(T obj) { System.Console.WriteLine($"Foo<T>(T obj), obj type: {obj.GetType().Name}"); } 
+        public void Foo(int x) { System.Console.WriteLine("Foo(int x)"); } 
+        public void Foo<T1, T2>(T1 obj1, T2 obj2) { System.Console.WriteLine($"Foo<T1, T2>(T1 obj1, T2 obj2); {obj1.GetType().Name} " + $"{obj2.GetType().Name}"); } 
+        public void Foo<T>(int obj1, T obj2) { System.Console.WriteLine($"Foo<T>(int obj1, T obj2); {obj2.GetType().Name}"); } 
+        public void Bar<T>(T obj) { Foo(obj); } }
 
 }
