@@ -1,3 +1,4 @@
+using System;
 namespace ClassCode2{
     public static class StringExtension { 
         public static int GetWordCount1(this string s) => s.Split().Length; 
