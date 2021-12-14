@@ -1411,3 +1411,53 @@ jagged[2] = new int[3] { 9, 10, 11 };
 
 ***用方括号声明数组是C#中使用Array类的表示法。在后台使用C#语法，会创建一个派生自抽象基类Array的新类。***这样，就可以使用Array类为每个C#数组定义的方法和属性了。例如，前面就使用了Length属性，或者使用foreach语句迭代数组-其实这是使用了Array类中的GetEnumerator（）方法。
 
+### 6.4.1 ArraySegment< T >
+
+结构ArraySegment< T>表示数组的一段。如果需要使用不同的方法处理某个大型数组的不同部分，那么可以把相应的数组部分复制到各个方法中。此时，与创建多个数组相比，更有效的方法是使用一个数组，将整个数组传递给不同的方法。这些方法只使用数组的某个部分。方法的参数除了数组以外，还应包括数组内的偏移量以及该方法应该使用的元素数。这样一来，方法就需要至少3个参数。当使用数组段时，只需要一个参数就可以了。ArraySegment< T>结构包含了关于数组段的信息（偏移量和元素个数）。
+
+注意： 数组段不复制原数组的元素，但原数组可以通过ArraySegment< T>访问。如果数组段中的元素改变了，这些变化就会反映到原数组中。
+
+### 6.4.2 数组迭代器
+
+在foreach语句中使用枚举，可以迭代集合中的元素，且无须知道集合中的元素个数。foreach语句使用了一个枚举器。图7-7显示了调用foreach方法的客户端和集合之间的关系。数组或集合实现带GetEumerator（）方法的IEumerable接口。GetEumerator（）方法返回一个实现IEumerator接口的枚举。接着，foreach语句就可以使用IEumerable接口迭代集合了。
+
+
+
+foreach语句会解析为下面的代码段。首先，调用GetEnumerator（）方法，获得数组的一个枚举器。在while循环中——只要MoveNext（）返回true——就用Current属性访问数组中的元素： 
+
+```C#
+
+foreach (var p in persons) { WriteLine(p); }
+//等价于
+IEnumerator<Person> enumerator = persons.GetEnumerator(); 
+while (enumerator.MoveNext()) { 
+    Person p = enumerator.Current; 
+    WriteLine(p); 
+}
+```
+
+### 6.4.3　yield语句
+
+yield return语句返回集合的一个元素，并移动到下一个元素上。yield break可停止迭代。
+
+示例：
+
+```C#
+using System; 
+using System.Collections; 
+namespace Wrox.ProCSharp.Arrays { 
+    public class HelloCollection { 
+        public IEnumerator<string> GetEnumerator() { 
+            yield return "Hello"; 
+            yield return "World"; 
+        } 
+    }
+}
+```
+
+
+
+
+
+public class HelloCollection { public IEnumerator GetEnumerator() => new Enumerator(0); public class Enumerator:IEnumerator<string>, IEnumerator, IDisposable { private int _state; private string _current; public Enumerator(int state) { _state = state; } bool System.Collections.IEnumerator.MoveNext() { switch (state) { case 0: _current = "Hello"; _state = 1; return true; case 1: _current = "World"; _state = 2; return true; case 2: break; } return false; } void System.Collections.IEnumerator.Reset() { throw new NotSupportedException(); } string System.Collections.Generic.IEnumerator<string>.Current => current; object System.Collections.IEnumerator.Current => current; void IDisposable.Dispose() { } } }
+

@@ -25,6 +25,11 @@ namespace MyArray
             jagged[1] = new int[6] { 3, 4, 5, 6, 7, 8 }; 
             jagged[2] = new int[3] { 9, 10, 11 };
 
+            HelloCollection hc = new HelloCollection();
+            foreach (var item in hc)
+            {
+                System.Console.WriteLine(item);
+            }
             //printArr(twodim);
         }
 
@@ -35,7 +40,53 @@ namespace MyArray
             }
             System.Console.WriteLine("--------------IEnumerable--------------"); 
         }
+
+        public static void testEnum(){
+            HelloCollection hc = new HelloCollection(); 
+            IEnumerator<int> enumerator = hc.GetEnumerator(); 
+            while (enumerator.MoveNext()) { 
+                int p = enumerator.Current; 
+                System.Console.WriteLine(p); 
+            }
+        }
     }
 
+    public class HelloCollection { 
+        int[] _data = {1,2,3,5,6,7};
+        int index = 0;
+        public IEnumerator<int> GetEnumerator() { 
+            yield return _data[index++]; 
+            yield return _data[index++]; 
+        } 
+    }
+    
+    public class HelloCollection1 { 
+        public IEnumerator GetEnumerator() => new Enumerator(0); 
+        public class Enumerator:IEnumerator<string>, IEnumerator, IDisposable { 
+            private int _state;
+            private string _current;
+            public Enumerator(int state) {
+                 _state = state; 
+            } 
+            bool System.Collections.IEnumerator.MoveNext() { 
+                switch (_state) { 
+                case 0: _current = "Hello"; _state = 1; 
+                return true; 
+                case 1: _current = "World"; _state = 2; 
+                return true; 
+                case 2: 
+                break; 
+                } 
+                return false;
+            } 
+            void System.Collections.IEnumerator.Reset() { 
+                throw new NotSupportedException(); 
+            } 
+            string System.Collections.Generic.IEnumerator<string>.Current => _current; 
+            object System.Collections.IEnumerator.Current => _current; 
+            
+            void IDisposable.Dispose() { } 
+        }
+    }
 
 }
