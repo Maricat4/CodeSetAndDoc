@@ -1460,4 +1460,67 @@ namespace Wrox.ProCSharp.Arrays {
 
 
 public class HelloCollection { public IEnumerator GetEnumerator() => new Enumerator(0); public class Enumerator:IEnumerator<string>, IEnumerator, IDisposable { private int _state; private string _current; public Enumerator(int state) { _state = state; } bool System.Collections.IEnumerator.MoveNext() { switch (state) { case 0: _current = "Hello"; _state = 1; return true; case 1: _current = "World"; _state = 2; return true; case 2: break; } return false; } void System.Collections.IEnumerator.Reset() { throw new NotSupportedException(); } string System.Collections.Generic.IEnumerator<string>.Current => current; object System.Collections.IEnumerator.Current => current; void IDisposable.Dispose() { } } }
+### 6.4.1 Array的创建
+
+Array是个抽象类，不能使用构造函数来创建。可以使用CreateInstance来创建数组。如果事先不知道元素的类型，该方法就有用了。
+
+```C#
+Array intArray1 = Array.CreateInstance(typeof(int), 5); 
+for (int i = 0; i < 5; i++) { 
+    intArray1.SetValue(33, i); 
+} 
+for (int i = 0; i < 5; i++) { 
+    WriteLine(intArray1.GetValue(i)); 
+}
+```
+
+CreateInstance（）方法有许多重载版本，可以创建多维数组和不基于0的数组。例子略。
+
+### 6.4.2 Array的复制
+
+因为数组是引用类型，所以将一个数组变量赋予另一个数组变量，就会得到两个引用同一数组的变量。而复制数组，会使数组实现ICloneable接口。**<u>*这个接口定义的Clone（）方法会创建数组的浅表副本。*</u>**
+
+
+
+*<u>**如果数组的元素是值类型，就会开辟新空间存储值。**</u>*
+
+*<u>**如果数组的元素是引用类型，就会开辟新空间存储引用。**</u>*
+
+*<u>**注意： 如果需要包含引用类型的数组的深层副本，就必须迭代数组并创建新对象。**</u>*
+
+除了使用Clone（）方法之外，还可以使用Array.Copy（）方法创建浅表副本。但Clone（）方法和Copy（）方法有一个重要区别：Clone（）方法会创建一个新数组，而Copy（）方法必须传递阶数相同且有足够元素的已有数组。
+
+### 6.4.3 Array的排序
+
+Array类使用Quicksort算法对数组中的元素进行排序。Sort（）方法需要数组中的元素实现IComparable接口。因为简单类型（如System.String和System.Int32）实现IComparable接口，所以可以对包含这些类型的元素排序。
+
+注意： Array类还提供了Sort方法，它需要将一个委托作为参数。这个参数可以传递给方法，从而比较两个对象，而不需要依赖IComparable或IComparer接口。第9章将介绍如何使用委托。
+
+## 6.5 数组作为参数
+
+数组可以作为参数传递给方法，也可以从方法返回。要返回一个数组，只需要把数组声明为返回类型。
+
+```C#
+static void DisplayPersons(Person[] persons) { //...
+}
+static Person[] GetPersons(){ //...
+}
+```
+
+### 6.5.1 数组协变
+
+数组支持协变。这表示数组可以声明为基类，其派生类型的元素可以赋予数组元素。
+
+例如，可以声明一个object[]类型的参数，给它传递一个Person[]： 
+
+```C#
+static void DisplayArray(object[] data) { //… 
+}
+```
+
+　 **<u>*注意： 数组协变只能用于引用类型，不能用于值类型。另外，数组协变有一个问题，它只能通过运行时异常来解决。如果把Person数组赋予object数组，object数组就可以使用派生自object的任何元素。例如，编译器允许把字符串传递给数组元素。但因为object数组引用Person数组，所以会出现一个运行时异常ArrayTypeMismatchException。*</u>**
+
+**<u>*？？？？？？？？查查英文原书，这段翻译感觉问题很大*</u>**
+
+### 6.5.2 ArraySegment<T>
 

@@ -30,6 +30,9 @@ namespace MyArray
             {
                 System.Console.WriteLine(item);
             }
+            createArrayByType();
+            ArrayClone();
+            ArrayType();
             //printArr(twodim);
         }
 
@@ -48,6 +51,38 @@ namespace MyArray
                 int p = enumerator.Current; 
                 System.Console.WriteLine(p); 
             }
+        }
+        public static void createArrayByType(){
+            Array intArray1 = Array.CreateInstance(typeof(int), 5); 
+            for (int i = 0; i < 5; i++) { 
+                intArray1.SetValue(33+i, i); 
+            } 
+            for (int i = 0; i < 5; i++) { 
+                System.Console.WriteLine(intArray1.GetValue(i)); 
+            }
+        }
+
+        //数组的复制
+        public static void ArrayClone(){
+            int[] intArray1 = {1, 2}; 
+            int[] intArray2 = (int[])intArray1.Clone();
+            intArray1[0] = 4;
+            System.Console.WriteLine(intArray1[0]); 
+            System.Console.WriteLine(intArray2[0]); 
+        }
+        //数组协变
+        public static void ArrayType(){
+            Person[] a = new Person[5];
+            ArrayTypeFun(a);
+            string[] b =  new string[5];
+            ArrayTypeFun(b);
+        }
+        public static void ArrayTypeFun(object[] tmp){
+            
+        }
+        class Person
+        {
+            int a;
         }
     }
 
