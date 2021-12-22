@@ -1524,3 +1524,58 @@ static void DisplayArray(object[] data) { //…
 
 ### 6.5.2 ArraySegment<T>
 
+
+
+
+
+# 7 运算符
+
+
+
+## 7.1 值得注意的两个操作符
+
+nameof是新的C# 6运算符。该运算符接受一个符号、属性或方法，并返回其名称。
+
+typeof运算符返回一个表示特定类型的System.Type对象。例如，typeof（string）返回表示System.String类型的Type对象。在使用反射技术动态地查找对象的相关信息时，这个运算符很有用。第16章将介绍反射。
+
+## 7.2 比较对象的相等性
+
+System.Object定义了3个不同的方法来比较对象的相等性：ReferenceEquals（）和两个版本的Equals（）。再加上比较运算符（==），实际上有4种比较相等性的方法。这些方法有一些细微的区别，下面就介绍它们。
+
+### 7.2.1 ReferenceEquals()
+
+ReferenceEquals（）是一个静态方法，其测试两个引用是否指向类的同一个实例，特别是两个引用是否包含内存中的相同地址。作为静态方法，它不能重写，所以System.Object的实现代码保持不变。如果提供的两个引用指向同一个对象实例，则ReferenceEquals（）总是返回true；否则就返回false。但是，它认为null等于null：
+
+```C#
+SomeClass x, y; 
+x = new SomeClass(); 
+y = new SomeClass(); 
+bool B1 = ReferenceEquals(null, null); 
+// returns true bool B2 = ReferenceEquals(null, x); 
+// returns false bool B3 = ReferenceEquals(x, y); 
+// returns false because x and y 
+// point to different objects
+```
+
+### 7.2.2 Equals（）虚方法
+
+Equals（）虚版本的System.Object实现代码也可以**<u>*比较引用*</u>**。**<u>*但因为这是虚方法，所以可以在自己的类中重写它，从而按值来比较对象。特别是如果希望类的实例用作字典中的键，就需要重写这个方法，以比较相关值。否则，根据重写Object.GetHashCode（）的方式，包含对象的字典类要么不工作，要么工作的效率非常低*</u>**。
+
+在重写Equals（）方法时要注意，重写的代码不应抛出异常。同理，这是因为如果抛出异常，字典类就会出问题，一些在内部调用这个方法的.NET基类也可能出问题。
+
+### 7.2.3 静态的Equals（）方法 
+
+静态的Equals（）方法 Equals（）的静态版本与其虚实例版本的作用相同，其区别是静态版本带有两个参数，并对它们进行相等性比较。这个方法可以处理两个对象中有一个是null的情况；因此，如果一个对象可能是null，这个方法就可以抛出异常，提供额外的保护。<u>***静态重载版本首先要检查传递给它的引用是否为null。如果它们都是null，就返回true（因为null与null相等）。***</u>如果只有一个引用是null，它就返回false。**<u>*如果两个引用实际上引用了某个对象，它就调用Equals（）的虚实例版本。这表示在重写Equals（）的实例版本时，其效果相当于也重写了静态版本。*</u>**
+
+默认的静态equals()是比较引用的。
+
+### 7.2.4  比较运算符（==）
+
+最好将比较运算符看作**<u>*严格的值比较和严格的引用比较之间的中间选项*</u>**。在大多数情况下，下面的代码表示正在比较引用：
+
+```C#
+bool b = (x == y); // x, y object references
+```
+
+但是，如果把一些类看作值，其含义就会比较直观，这是可以接受的方法。在这些情况下，最好重写比较运算符，以执行值的比较。后面将讨论运算符的重载，但一个明显例子是System.String类，Microsoft重写了这个运算符，以比较字符串的内容，而不是比较它们的引用。
+
