@@ -17,6 +17,16 @@ namespace MyOperator{
             System.Console.WriteLine(convert(a3));
 
             BiJiaoOp();
+
+            //运算符重载
+            opover();
+
+            //索引器重载
+            opIndex();
+            
+            //类型转换重载
+            opkh();
+            opkh1();
         }
 
 
@@ -52,6 +62,67 @@ namespace MyOperator{
             var kk = new NameA(-999);
             print(kk.Equals(x));
             print(y.Equals(x));
+        }
+
+
+        public static void opover(){
+
+            Vector vect1, vect2, vect3,vect4; 
+            vect1 = new Vector(3.0, 3.0, 1.0); 
+            vect2 = new Vector(2.0, -4.0, -4.0); 
+            vect4 = new Vector(2.0, -4.0, -4.0); 
+            vect3 = vect1 + vect2; 
+            print($"vect1 = {vect1}"); 
+            print($"vect2 = {vect2}"); 
+            print($"vect3 = {vect3}");
+            print(vect3 == vect2);
+            print(vect3 != vect2);
+            print(Object.Equals(vect2,vect2));
+            print(Object.Equals(vect2,vect4));
+            
+        }
+
+        //索引器重载
+        public static void opIndex(){
+            var p1 = new Person("Ayrton", "Senna", new DateTime(1960, 3, 21)); 
+            var p2 = new Person("Ronnie", "Peterson", new DateTime(1944, 2, 14)); 
+            var p3 = new Person("Jochen", "Rindt", new DateTime(1942, 4, 18)); 
+            var p4 = new Person("Francois", "Cevert", new DateTime(1944, 2, 25)); 
+            var coll = new PersonCollection(p1, p2, p3, p4); 
+            print(coll[2]); 
+            foreach (var r in coll[new DateTime(1960, 3, 21)]) { 
+                print(r); 
+            }
+
+        }
+
+        //自定义类型转换
+        public static void opkh(){
+            float amount = 45.63f; 
+            Currency amount2 = (Currency)amount;
+
+            print(amount2);
+            // Currency amount3 = amount;
+        }
+
+        public static void opkh1(){
+            try { 
+                var balance = new Currency(50,35); 
+                print(balance); 
+                print($"balance is {balance}"); // implicitly invokes ToString 
+                float balance2= balance; 
+                print($"After converting to float, = {balance2}"); 
+                balance = (Currency) balance2; 
+                print($"After converting back to Currency, = {balance}"); 
+                print("Now attempt to convert out of range value of " + "-$50.50 to a Currency:"); 
+                checked { 
+                    balance = (Currency) (-50.50); 
+                    print($"Result is {balance}"); 
+                    } 
+                } 
+            catch(Exception e) { 
+                print($"Exception occurred: {e.Message}"); 
+            }
         }
     }
     class NameA
@@ -93,4 +164,72 @@ namespace MyOperator{
         //     return base.GetHashCode();
         // }
     }
+
+    class Vector { 
+        public Vector(double x, double y, double z) { X = x; Y = y; Z = z; } 
+        public Vector(Vector v) { X = v.X; Y = v.Y; Z = v.Z; } 
+        public double X { get; } 
+        public double Y { get; } 
+        public double Z { get; } 
+        public override string ToString() => $"( {X}, {Y}, {Z} )"; 
+
+
+        //运算符重载
+        public static Vector operator + (Vector left, Vector right) => new Vector(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
+
+        //参数顺序会影响编译器识别表达式，第一个为左，第二个为右，其中，int类型乘以
+        public static Vector operator * (double left, Vector right) => new Vector(left * right.X, left * right.Y, left * right.Z);
+        public static Vector operator * (Vector left , double right) => right * left;
+
+        public static bool operator == (Vector left , Vector right) { 
+            if (object.ReferenceEquals(left, right)) return true; 
+            return left.X == right.X && left.Y == right.Y && left.Z == right.Z; 
+        }
+
+        public static bool operator != (Vector left , Vector right) => ! (right == left);
+    }
+
+
+    public class Person { 
+        public DateTime Birthday { get; } 
+        public string FirstName { get; } 
+        public string LastName { get; } 
+        public Person(string firstName, string lastName, DateTime birthDay) { 
+            FirstName = firstName; 
+            LastName = lastName; 
+            Birthday = birthDay; 
+        } 
+        public override string ToString() => $"{FirstName} {LastName}"; 
+    }
+
+    public class PersonCollection { 
+        private Person[] _people; 
+        public PersonCollection(params Person[] people) { 
+            _people =people.ToArray();
+        } 
+
+        public Person this[int index] { get { return _people[index]; } set { _people[index] = value; } }
+        //不仅仅可以用int作为索引，DataTime也行
+
+        //返回的一个可Person迭代器
+        public IEnumerable<Person> this[DateTime birthDay] { get { return _people.Where(p => p.Birthday == birthDay); } }
+
+    }
+    
+
+    public struct Currency { 
+        public uint Dollars { get; } 
+        public ushort Cents { get; } 
+        public Currency(uint dollars, ushort cents) { Dollars = dollars; Cents = cents; } 
+        public override string ToString() => $"${Dollars}.{Cents, -2:00}"; 
+        
+        public static implicit operator float(Currency value) => value.Dollars + (value.Cents/100.0f);
+
+        public static explicit operator Currency (float value) { 
+            uint dollars = (uint)value; 
+            ushort cents = (ushort)((value-dollars)*100); 
+            return new Currency(dollars, cents); 
+        }
+    }
+    
 }
