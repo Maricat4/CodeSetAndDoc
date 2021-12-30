@@ -1713,3 +1713,83 @@ public static implicit operator float (Currency value) { // processing }
 
 **<u>*注意： C++开发人员应注意，这种情况与C++中的用法不同，在C++中，类型强制转换用于类的实例成员。*</u>**
 
+# 8 委托
+
+## 8.1 声明委托
+
+在C#中使用一个类时，分两个阶段操作。首先，需要定义这个类，即告诉编译器这个类由什么字段和方法组成。然后（除非只使用静态方法），实例化该类的一个对象。使用委托时，也需要经过这两个步骤。***首先必须定义要使用的委托，对于委托，定义它就是告诉编译器这种类型的委托表示哪种类型的方法。***  <u>然后，必须创建该委托的一个或多个实例。</u><u>编译器在后台将创建表示该委托的一个类。</u>声明委托的语法如下：
+
+```c#
+delegate void IntMethodInvoker(int x);
+```
+
+在这个示例中，声明了一个委托IntMethodInvoker，并指定该委托的每个实例都可以包含一个方法的引用，该方法带有一个int参数，并返回void。<u>理解委托的一个要点是它们的类型安全性非常高。在定义委托时，必须给出它所表示的方法的签名和返回类型等全部细节。</u>
+
+其语法类似于方法的定义，但没有方法主体，且定义的前面要加上关键字delegate。因为定义委托基本上是定义一个新类，所以可以在定义类的任何相同地方定义委托。也就是说，可以在另一个类的内部定义委托，也可以在任何类的外部定义，还可以在名称空间中把委托定义为顶层对象。根据定义的可见性和委托的作用域，可以在委托的定义上应用任意常见的访问修饰符：public、private、protected等。
+
+注意： **<u>*实际上，“定义一个委托”是指“定义一个新类”。委托实现为派生自基类System. MulticastDelegate的类，System.MulticastDelegate又派生自基类System.Delegate。C#编译器能识别这个类，会使用其委托语法，因此我们不需要了解这个类的具体执行情况。这是C#与基类共同合作以使编程更易完成的另一个范例。*</u>**
+
+## 8.2 使用委托
+
+**<u>*为了减少输入量，在需要委托实例的每个位置可以只传送地址的名称。这称为委托推断。*</u>**只要编译器可以把委托实例解析为特定的类型，这个C#特性就是有效的。
+
+```C#
+private delegate string GetAString(); 
+public static void testDelegate(){
+    int x = 40; 
+    int y = 50;
+    GetAString firstStringMethod = new GetAString(x.ToString); 
+    GetAString firstStringMethod1 = y.ToString;
+    // With firstStringMethod initialized to x.ToString(),
+    print($"String is {firstStringMethod()}"); 
+    x = 50;
+    print($"String is {firstStringMethod1()}"); 
+    // the above statement is equivalent to saying 
+    // Console.WriteLine($"String is {x.ToString()}"); }
+}
+```
+
+　 **<u>*注意： 调用上述方法名时，输入形式不能为x.ToString（）（不要输入圆括号），也不能把它传送给委托变量。输入圆括号会调用一个方法，而调用x.ToString（）方法会返回一个不能赋予委托变量的字符串对象。只能把方法的地址赋予委托变量。*</u>**
+
+**<u>*委托推断可以在需要委托实例的任何地方使用。委托推断也可以用于事件，因为事件基于委托（参见本章后面的内容）。 委托的一个特征是它们的类型是安全的，可以确保被调用的方法的签名是正确的。但有趣的是，它们不关心在什么类型的对象上调用该方法，甚至不考虑该方法是静态方法还是实例方法。*</u>**　 
+
+注意： 给定委托的实例可以引用任何类型的任何对象上的实例方法或静态方法——只要方法的签名匹配委托的签名即可。
+
+## 8.3 委托的使用示例(传递)
+
+```C#
+delegate double DoubleOp(double x);
+public static void testDelegate3() { 
+    DoubleOp[] operations = { MathOperations.MultiplyByTwo, MathOperations.Square }; 
+    for (int i=0; i < operations.Length; i++) { 
+        print($"Using operations[{i}]:"); 
+        ProcessAndDisplayNumber(operations[i], 2.0); 
+        ProcessAndDisplayNumber(operations[i], 7.94); 
+        ProcessAndDisplayNumber(operations[i], 1.414);
+        print("");
+    } 
+} 
+static void ProcessAndDisplayNumber(DoubleOp action, double value) { 
+    double result = action(value); 
+    print($"Value is {value}, result of operation is {result}"); 
+}
+class MathOperations { 
+        public static double MultiplyByTwo(double value) => value * 2; 
+        public static double Square(double value) => value * value; 
+}
+```
+
+## 8.4 泛型委托，Action< T > 和Func< T >委托
+
+除了为每个参数和返回类型定义一个新委托类型之外，还可以使用Action<T>和Func<T>委托。**<u>*泛型Action<T>委托表示引用一个void返回类型的方法。*</u>**这个委托类存在不同的变体，可以传递至多16种不同的参数类型。**<u>*没有泛型参数的Action类可调用没有参数的方法。*</u>**    **<u>*Action< in T >调用带一个参数的方法，Action<in T1, in T2>调用带两个参数的方法，Action<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8>调用带8个参数的方法*</u>**。
+
+Func< T >委托可以以类似的方式使用。**<u>*Func< T >允许调用带返回类型的方法。*</u>** 与Action< T >类似，Func< T >也定义了不同的变体，至多也可以传递16个参数类型和一个返回类型。**<u>*Func< out TResult >委托类型可以调用带返回类型且无参数的方法*</u>**， <u>Func<in T, out TResult>调用带一个参数的方法，Func<in T1, in T2, in T3, in T4, out TResult>调用带4个参数的方法。</u>
+
+## 8.5 BubbleSorter示例
+
+下面的示例将说明委托的真正用途。我们要编写一个类BubbleSorter，它实现一个静态方法Sort（），这个方法的第一个参数是一个对象数组，把该数组按照升序重新排列。例如，假定传递给该委托的是int数组：{0, 5, 6, 2, 1}，则返回的结果应是{0, 1, 2, 5, 6}。
+
+
+
+
+

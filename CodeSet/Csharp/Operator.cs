@@ -88,11 +88,11 @@ namespace MyOperator{
             var p2 = new Person("Ronnie", "Peterson", new DateTime(1944, 2, 14)); 
             var p3 = new Person("Jochen", "Rindt", new DateTime(1942, 4, 18)); 
             var p4 = new Person("Francois", "Cevert", new DateTime(1944, 2, 25)); 
-            var coll = new PersonCollection(p1, p2, p3, p4); 
-            print(coll[2]); 
-            foreach (var r in coll[new DateTime(1960, 3, 21)]) { 
-                print(r); 
-            }
+            // var coll = new PersonCollection(p1, p2, p3, p4); 
+            // print(coll[2]); 
+            // foreach (var r in coll[new DateTime(1960, 3, 21)]) { 
+            //     print(r); 
+            // }
 
         }
 
@@ -202,19 +202,19 @@ namespace MyOperator{
         public override string ToString() => $"{FirstName} {LastName}"; 
     }
 
-    public class PersonCollection { 
-        private Person[] _people; 
-        public PersonCollection(params Person[] people) { 
-            _people =people.ToArray();
-        } 
+    // public class PersonCollection { 
+    //     private Person[] _people; 
+    //     public PersonCollection(params Person[] people) { 
+    //         _people =people.ToArray();
+    //     } 
 
-        public Person this[int index] { get { return _people[index]; } set { _people[index] = value; } }
-        //不仅仅可以用int作为索引，DataTime也行
+    //     public Person this[int index] { get { return _people[index]; } set { _people[index] = value; } }
+    //     //不仅仅可以用int作为索引，DataTime也行
 
-        //返回的一个可Person迭代器
-        public IEnumerable<Person> this[DateTime birthDay] { get { return _people.Where(p => p.Birthday == birthDay); } }
+    //     //返回的一个可Person迭代器
+    //     public IEnumerable<Person> this[DateTime birthDay] { get { return _people.Where(p => p.Birthday == birthDay); } }
 
-    }
+    // }
     
 
     public struct Currency { 
