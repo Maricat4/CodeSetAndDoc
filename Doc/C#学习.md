@@ -1787,9 +1787,54 @@ Func< T >委托可以以类似的方式使用。**<u>*Func< T >允许调用带�
 
 ## 8.5 BubbleSorter示例
 
-下面的示例将说明委托的真正用途。我们要编写一个类BubbleSorter，它实现一个静态方法Sort（），这个方法的第一个参数是一个对象数组，把该数组按照升序重新排列。例如，假定传递给该委托的是int数组：{0, 5, 6, 2, 1}，则返回的结果应是{0, 1, 2, 5, 6}。
+传递比较函数。匹配上函数类型即可。
 
+```C#
+static public void Sort<T>(IList<T> sortArray, Func<T, T, bool> comparison){
+    bool swapped = true; 
+    do { 
+        swapped = false; 
+        for (int i = 0; i < sortArray.Count - 1; i++) { 
+            if (comparison(sortArray[i],sortArray[i+1]))
+                // problem with this test 
+            { 
+                T temp = sortArray[i]; 
+                sortArray[i] = sortArray[i + 1]; 
+                sortArray[i + 1] = temp; 
+                swapped = true; 
+            } 
+        } 
+    } while (swapped);
+}
+```
 
+## 8.6 多播委托
 
+**<u>*前面使用的每个委托都只包含一个方法调用。调用委托的次数与调用方法的次数相同。如果要调用多个方法，就需要多次显式调用这个委托。但是，委托也可以包含多个方法。这种委托称为多播委托。如果调用多播委托，就可以按顺序连续调用多个方法。为此，委托的签名就必须返回void；否则，就只能得到委托调用的最后一个方法的结果。*</u>**
 
+<u>*如果正在使用多播委托，就应知道对同一个委托，调用其方法链的顺序并未正式定义。因此应避免编写依赖于以特定顺序调用方法的代码。*</u>
+
+**<u>*通过一个委托调用多个方法还可能导致一个更严重的问题。多播委托包含一个逐个调用的委托集合。如果通过委托调用的其中一个方法抛出一个异常，整个迭代就会停止。*</u>**
+
+**<u>*在这种情况下，为了避免这个问题，应自己迭代方法列表。Delegate类定义GetInvocationList（）方法，它返回一个Delegate对象数组。现在可以使用这个委托调用与委托直接相关的方法，捕获异常，并继续下一次迭代：*</u>** 
+
+```C#
+static void Main() { 
+    Action d1 = One; 
+    d1 += Two; 
+    Delegate[] delegates = d1.GetInvocationList(); 
+    foreach (Action d in delegates) { 
+        try { d(); } 
+        catch (Exception) { 
+            WriteLine("Exception caught"); 
+        } 
+    } 
+}
+```
+
+## 8.7 匿名方法
+
+到目前为止，要想使委托工作，方法必须已经存在（即委托通过其将调用方法的相同签名定义）。但还有另外一种使用委托的方式：通过匿名方法。匿名方法是用作委托的参数的一段代码。
+
+用匿名方法定义委托的语法与前面的定义并没有区别。但在实例化委托时，就会出现区别。下面是一个非常简单的控制台应用程序，它说明了如何使用匿名方法（代码文件AnonymousMethods/Program.cs）：
 

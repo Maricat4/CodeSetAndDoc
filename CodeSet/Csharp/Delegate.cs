@@ -6,9 +6,11 @@ namespace MyDelegate{
     class RunClass
     {
         public static void Run(){
-            testDelegate();
-            testDelegate2();
-            testDelegate3();
+            // testDelegate();
+            // testDelegate2();
+            // testDelegate3();
+            // SortTest();
+            MultiDelegate();
         }
         public static void print<T>(T o){
             System.Console.WriteLine( $"{o}");
@@ -51,6 +53,7 @@ namespace MyDelegate{
                 ProcessAndDisplayNumber(operations[i], 7.94); 
                 ProcessAndDisplayNumber(operations[i], 1.414);
                 print("");
+                
             } 
         } 
         static void ProcessAndDisplayNumber(Func<double,double> action, double value) { 
@@ -58,7 +61,53 @@ namespace MyDelegate{
             print($"Value is {value}, result of operation is {result}"); 
         }
 
+        static void SortTest() { 
+            Employee[] employees = { 
+                new Employee("Bugs Bunny", 20000), 
+                new Employee("Elmer Fudd", 10000), 
+                new Employee("Daffy Duck", 25000), 
+                new Employee("Wile Coyote", 1000000.38m), 
+                new Employee("Foghorn Leghorn", 23000), 
+                new Employee("RoadRunner", 50000) }; 
+            Sort(employees, Employee.CompareSalary); 
+            foreach (var employee in employees) { print(employee); }
+
+        }
+        
+        static void MultiDelegate(){
+            Action<double> operations = MathOperations.MultiplyByTwo1; 
+            operations += MathOperations.Square1;
+            operations(10);
+        }
+
+
+        static public void Sort<T>(IList<T> sortArray, Func<T, T, bool> comparison){
+            bool swapped = true; 
+            do { 
+                swapped = false; 
+                for (int i = 0; i < sortArray.Count - 1; i++) { 
+                    if (comparison(sortArray[i],sortArray[i+1]))
+                    // problem with this test 
+                    { 
+                        T temp = sortArray[i]; 
+                        sortArray[i] = sortArray[i + 1]; 
+                        sortArray[i + 1] = temp; 
+                        swapped = true; 
+                    } 
+                } 
+            } while (swapped);
+
+        }
     }
+
+    class Employee { 
+        public Employee(string name, decimal salary) { Name = name; Salary = salary; } 
+        public string Name { get; } 
+        public decimal Salary { get; private set; } 
+        public override string ToString() => $"{Name}, {Salary:C}"; 
+        public static bool CompareSalary(Employee e1, Employee e2) => e1.Salary < e2.Salary; 
+    }
+
 
 
     struct Currency { 
@@ -83,7 +132,14 @@ namespace MyDelegate{
     
     class MathOperations { 
         public static double MultiplyByTwo(double value) => value * 2; 
+        public static void MultiplyByTwo1(double value){ 
+            RunClass.print(value * 2);
+        }
         public static double Square(double value) => value * value; 
+        public static void Square1(double value) {
+            RunClass.print(value * value);
+            
+        } 
     }
 
      
