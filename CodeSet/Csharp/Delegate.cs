@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections;
 using System;
+using System.Windows;
+// PackageReference System.Windows();
 namespace MyDelegate{
     class RunClass
     {
@@ -10,7 +12,11 @@ namespace MyDelegate{
             // testDelegate2();
             // testDelegate3();
             // SortTest();
-            MultiDelegate();
+            // MultiDelegate();
+            // AnonymousMethod();
+            // AnonymousMethod1();
+            EventDipatch();
+            EventDipatch1();
         }
         public static void print<T>(T o){
             System.Console.WriteLine( $"{o}");
@@ -98,6 +104,53 @@ namespace MyDelegate{
             } while (swapped);
 
         }
+
+
+        static public void AnonymousMethod() { 
+            string mid = ", middle part, "; 
+            Func<string, string> anonDel = delegate(string param) { 
+                param += mid; 
+                param += " and this was added to the string."; 
+                return param; 
+            }; 
+            print(anonDel("Start of string")); 
+        } 
+
+        static void AnonymousMethod1() { 
+            string mid = ", middle part, "; 
+            Func<string, string> lambda = param => { 
+                param += mid; param += " and this was added to the string."; 
+                return param; 
+            }; 
+            print(lambda("lambda")); 
+        }
+        static void EventDipatch() { 
+            var dealer = new CarDealer(); 
+            var daniel = new Consumer("Daniel"); 
+            var michael = new Consumer("michael"); 
+            //var sebastian = new Consumer("sebastian");
+
+            dealer.NewCarInfo += michael.NewCarIsHere; 
+            dealer.NewCar("Mercedes"); 
+            var sebastian = new Consumer("Sebastian"); 
+            dealer.NewCarInfo += sebastian.NewCarIsHere; 
+            dealer.NewCar("Ferrari"); 
+            dealer.NewCarInfo -= sebastian.NewCarIsHere; 
+            dealer.NewCar("Red Bull Racing"); 
+        }
+        static void EventDipatch1() { 
+            var dealer = new CarDealer(); 
+            var daniel = new Consumer("Daniel"); 
+            WeakEventManager<CarDealer, CarInfoEventArgs>.AddHandler(dealer, "NewCarInfo", daniel.NewCarIsHere);
+            dealer.NewCar("Mercedes"); 
+            var sebastian = new Consumer("Sebastian"); 
+            WeakEventManager<CarDealer, CarInfoEventArgs>.AddHandler(dealer, "NewCarInfo", sebastian.NewCarIsHere); 
+            dealer.NewCar("Ferrari"); 
+            WeakEventManager<CarDealer, CarInfoEventArgs>.RemoveHandler(dealer, "NewCarInfo", sebastian.NewCarIsHere); 
+            dealer.NewCar("Red Bull Racing");
+        }
+
+
     }
 
     class Employee { 
@@ -143,6 +196,45 @@ namespace MyDelegate{
     }
 
      
+    public class CarInfoEventArgs: EventArgs { 
+        public CarInfoEventArgs(string car) { Car = car; } 
+        public string Car { get; } 
+    } 
+    public class CarDealer { 
+        public event EventHandler<CarInfoEventArgs> NewCarInfo; 
+        public void NewCar(string car) { 
+            RunClass.print($"事件发布, 有车车来了 {car}"); 
+            NewCarInfo? .Invoke(this, new CarInfoEventArgs(car)); 
+            //相当于：
+            // EventHandler<CarInfoEventArgs> newCarInfo = NewCarInfo; 
+            // if (newCarInfo ! = null) { 
+            //     newCarInfo(this, new CarInfoEventArgs(car)
+            // );
+        } 
+    }
+
+    public class Consumer { 
+        private string _name; 
+        public Consumer(string name) { 
+            _name = name; 
+        }
+        public void NewCarIsHere(object sender, CarInfoEventArgs e) { 
+            RunClass.print($"我{_name}知道: 车车 {e.Car} 它来了,发布者{sender.ToString()}"); 
+        } 
+    }
+
+
+    public class Consumer1: IWeakEventListener { 
+        private string _name; 
+        public Consumer1(string name) { this._name = name; } 
+        public void NewCarIsHere(object sender, CarInfoEventArgs e) { 
+            RunClass.print("Consumer1{_name}: car {e.Car} is new"); 
+        }
+        bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e) { 
+             NewCarIsHere(sender, e as CarInfoEventArgs); 
+             return true; 
+        } 
+    }
 
 
 }

@@ -1836,5 +1836,186 @@ static void Main() {
 
 到目前为止，要想使委托工作，方法必须已经存在（即委托通过其将调用方法的相同签名定义）。但还有另外一种使用委托的方式：通过匿名方法。匿名方法是用作委托的参数的一段代码。
 
-用匿名方法定义委托的语法与前面的定义并没有区别。但在实例化委托时，就会出现区别。下面是一个非常简单的控制台应用程序，它说明了如何使用匿名方法（代码文件AnonymousMethods/Program.cs）：
+用匿名方法定义委托的语法与前面的定义并没有区别。但在实例化委托时，就会出现区别。下面是一个非常简单的控制台应用程序，它说明了如何使用匿名方法：
+
+```C#
+static public void AnonymousMethod() { 
+    string mid = ", middle part, "; 
+    Func<string, string> anonDel = delegate(string param) { 
+        param += mid; 
+        param += " and this was added to the string."; 
+        return param; 
+    }; 
+    print(anonDel("Start of string")); 
+}
+```
+
+在使用匿名方法时，必须遵循两条规则。
+
+**<u>*在匿名方法中不能使用跳转语句（break、goto或continue）跳到该匿名方法的外部，反之亦然：匿名方法外部的跳转语句不能跳到该匿名方法的内部。*</u>** 
+
+**<u>*在匿名方法内部不能访问不安全的代码。另外，也不能访问在匿名方法外部使用的ref和out参数。但可以使用在匿名方法外部定义的其他变量。*</u>**
+
+ 如果需要用匿名方法多次编写同一个功能，就不要使用匿名方法。此时与复制代码相比，编写一个命名方法比较好，因为该方法只需要编写一次，以后可通过名称引用它。
+
+**<u>注意： 匿名方法的语法在C# 2中引入。在新的程序中，并不需要这个语法，因为lambda表达式提供了相同的功能，还提供了其他功能。但是，在已有的源代码中，许多地方都使用了匿名方法，所以最好了解它。</u>**
+
+
+
+## 8.8 lambda 表达式
+
+eg:
+
+```C#
+static void AnonymousMethod1() { 
+    string mid = ", middle part, "; 
+    Func<string, string> lambda = param => { 
+        param += mid; param += " and this was added to the string."; 
+        return param; 
+    }; 
+    print(lambda("lambda")); 
+}
+```
+
+lambda运算符“ => ”的左边列出了需要的参数，而其右边定义了赋予lambda变量的方法的实现代码。
+
+### 8.8.1 lambda表达式参数
+
+左侧定义了参数：单个参数，多个参数。（没有参数呢？）
+
+eg：
+
+```C#
+Func<string, string> oneParam = s => $"change uppercase {s.ToUpper()}";
+WriteLine(oneParam("test"));
+Func<double, double, double> twoParams = (x, y) => x * y; 
+WriteLine(twoParams(3, 2));
+Func<double, double, double> twoParamsWithTypes = (double x, double y) => x * y; WriteLine(twoParamsWithTypes(4, 2));
+//没有参数
+Action line = () => Console.WriteLine();
+```
+
+**<u>*有时，编译器无法推断输入参数的类型。 可以显式指定类型！*</u>**
+
+### 8.8.2 多行代码
+
+添加花括号
+
+```C#
+Func<string, string> lambda = param => { 
+    param += mid; 
+    param += " and this was added to the string."; 
+    return param; 
+};
+```
+
+### 8.8.3 闭包
+
+通过lambda表达式可以**<u>*访问lambda表达式块外部的变量，这称为闭包*</u>**。闭包是非常好用的功能，但如果使用不当，也会非常危险。
+
+```C#
+int someVal = 5; 
+Func<int, int> f = x => x + someVal;
+someVal = 7; 
+WriteLine(f(3));//=>输出10
+```
+
+**<u>*同样，在lambda表达式中修改闭包的值时，可以在lambda表达式外部访问已改动的值。*</u>**
+
+现在我们也许会奇怪，如何在lambda表达式的内部访问lambda表达式外部的变量？
+
+为了理解这一点，看看编译器在定义lambda表达式时做了什么。对于lambda表达式x => x + someVal，编**<u>*译器会创建一个匿名类，它有一个构造函数来传递外部变量。该构造函数取决于从外部访问的变量数。*</u>**对于这个简单的例子，构造函数接受一个int值。匿名类包含一个匿名方法，其实现代码、参数和返回类型由lambda表达式定义：
+
+```C#
+public class AnonymousClass { 
+    private int someVal; 
+    public AnonymousClass(int someVal) { 
+        this.someVal = someVal; 
+    } 
+    public int AnonymousMethod(int x) => x + someVal; 
+}
+```
+
+　 **<u>*注意： 如果给多个线程使用闭包，就可能遇到并发冲突。最好仅给闭包使用不变的类型。这样可以确保不改变值，也不需要同步。*</u>**
+
+　 **<u>*注意： lambda表达式可以用于类型为委托的任意地方。类型是Expression或Expression<T>时，也可以使用lambda表达式，此时编译器会创建一个表达式树。*</u>**
+
+## 8.9 事件
+
+事件基于委托，为委托提供了一种发布/订阅机制。在.NET架构内到处都能看到事件。在Windows应用程序中，Button类提供了Click事件。这类事件就是委托。**<u>*触发Click事件时调用的处理程序方法需要得到定义，而其参数由委托类型定义。*</u>**
+
+### 8.9.1 事件发布程序及订阅
+
+在本节的示例代码中，事件用于连接CarDealer类和Consumer类。CarDealer类提供了一个新车到达时触发的事件。Consumer类订阅该事件，以获得新车到达的通知。
+
+委托EventHandler< TEventArgs >的定义如下：
+
+```C#
+public delegate void EventHandler<TEventArgs>(object sender, TEventArgs e) where TEventArgs: EventArgs
+```
+
+CarDealer类提供了EventHandler< CarInfoEventArgs >类型的NewCarInfo事件。
+
+**<u>*作为一个约定，事件一般使用带两个参数的方法；其中第一个参数是一个对象，包含事件的发送者，第二个参数提供了事件的相关信息。第二个参数随不同的事件类型而改变*</u>**。
+
+EventHandler< TEventArgs >定义了一个处理程序，它返回void，接受两个参数。对于EventHandler< TEventArgs >，第一个参数必须是object类型，第二个参数是T类型。EventHandler< TEventArgs >还定义了一个关于T的约束；它必须派生自基类EventArgs。
+
+在一行上定义事件是C#的简化记法。编译器会创建一个EventHandler< CarInfoEventArgs >委托类型的变量，并添加方法，以便从委托中订阅和取消订阅。该简化记法的较长形式如下所示。这非常类似于自动属性和完整属性之间的关系。对于事件，使用add和remove关键字添加和删除委托的处理程序：
+
+```C#
+private EventHandler<CarInfoEventArgs> newCarInfo; 
+public event EventHandler<CarInfoEventArgs> NewCarInfo { 
+    add { newCarInfo += value; } 
+    remove { newCarInfo -= value; } 
+}
+```
+
+```C#
+public class Consumer { 
+    private string _name; 
+    public Consumer(string name) { 
+        _name = name; 
+    }
+    public void NewCarIsHere(object sender, CarInfoEventArgs e) { 
+        RunClass.print($"我{_name}知道: 车车 {e.Car} 它来了"); 
+    } 
+}
+```
+
+Consumer类用作事件侦听器。这个类订阅了CarDealer类的事件，并定义了NewCarIsHere方法，该方法满足EventHandler< CarInfoEventArgs >委托的要求，该委托的参数类型是object和CarInfoEventArgs（代码文件EventsSample/Consumer.cs）：
+
+**<u>*按格式写好事件处理器。*</u>**
+
+### 8.9.2 弱事件
+
+通过事件，可直接连接发布程序和侦听器。但是，垃圾回收方面存在问题。**<u>*例如，如果不再直接引用侦听器，发布程序就仍有一个引用。垃圾回收器不能清空侦听器占用的内存，因为发布程序仍保有一个引用，会针对侦听器触发事件。*</u>**
+
+
+
+**<u>*这种强连接可以通过弱事件模式来解决，即使用WeakEventManager作为发布程序和侦听器之间的中介。*</u>**
+
+**<u>*WeakEventManager < T >在System.Windows程序集中定义，不属于.NET Core。这个示例用.NET Framework 4.6控制台应用程序完成，不运行在其他平台上。*</u>**
+
+使用弱事件，就不需要改变事件发布器（在示例代码CarDealer类中）。无论使用紧密耦合的事件还是弱事件都没有关系，其实现是一样的。**<u>*不同的是使用者的实现。*</u>**<u>使用者需要实现接口IWeakEventListener。</u>这个接口定义了方法ReceiveWeakEvent，**在事件触发时会在弱事件管理器中调用该方法。**<u>该方法的实现充当代理，调用方法NewCarIsHere</u>。
+
+```C#
+public class Consumer1: IWeakEventListener { 
+    private string _name; 
+    public Consumer(string name) { this._name = name; } 
+    public void NewCarIsHere(object sender, CarInfoEventArgs e) { 
+        RunClass.print("Consumer1{_name}: car {e.Car} is new"); 
+    }
+    bool IWeakEventListener.ReceiveWeakEvent(Type managerType, object sender, EventArgs e) { 
+        NewCarIsHere(sender, e as CarInfoEventArgs); 
+        return true; 
+    } 
+}
+```
+
+连接订阅与发布也有区别：
+
+```C#
+```
+
+
 
