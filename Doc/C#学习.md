@@ -2015,7 +2015,22 @@ public class Consumer1: IWeakEventListener {
 连接订阅与发布也有区别：
 
 ```C#
+static void EventDipatch1() { 
+    var dealer = new CarDealer(); 
+    var daniel = new Consumer("Daniel"); 
+    WeakEventManager<CarDealer, CarInfoEventArgs>.AddHandler(dealer, "NewCarInfo", daniel.NewCarIsHere);
+    dealer.NewCar("Mercedes"); 
+    var sebastian = new Consumer("Sebastian"); 
+    WeakEventManager<CarDealer, CarInfoEventArgs>.AddHandler(dealer, "NewCarInfo", sebastian.NewCarIsHere); 
+    dealer.NewCar("Ferrari"); 
+    WeakEventManager<CarDealer, CarInfoEventArgs>.RemoveHandler(dealer, "NewCarInfo", sebastian.NewCarIsHere); 
+    dealer.NewCar("Red Bull Racing");
+}
 ```
 
 
+
+**<u>*注意： 动态创建订阅器时，为了避免出现资源泄露，必须特别留意事件。也就是说，需要在订阅器离开作用域（不再需要它）之前，确保取消对事件的订阅，或者使用弱事件。事件常常是应用程序中内存泄露的一个原因，因为订阅器有长时间存在的作用域，所以源代码也不能被垃圾回收。*</u>**
+
+## 9 字符串与正则表达式
 
