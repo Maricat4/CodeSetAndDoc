@@ -2034,3 +2034,555 @@ static void EventDipatch1() {
 
 ## 9 字符串与正则表达式
 
+在C#中string关键字的映射实际上指向.NET基类System.String。**<u>*System.String是一个功能非常强大且用途广泛的基类，但它不是.NET库中唯一与字符串相关的类。*</u>** 
+
+主要内容
+
+.NET基类System.String的特性。
+
+构建字符串— —如果多次修改一个字符串，例如，创建一个长字符串，然后显示该字符串或将其传递给其他方法或应用程序，String类就会变得效率低下。对于这种情况，应使用另一个类System.Text.StringBuilder，因为它是专门为这种情况设计的。
+
+格式化表达式 — —这些格式化表达式将用于后面几章中的Console.WriteLine（）方法。格式化表达式使用两个有用的接口IFormatProvider和IFormattable来处理。在自己的类上实现这两个接口，实际上就可以定义自己的格式化序列，这样，Console.WriteLine（）和类似的类就可以按指定的方式显示类的值。
+
+正则表达式 — —.NET还提供了一些非常复杂的类来识别字符串，或从长字符串中提取满足某些复杂条件的子字符串。例如，找出字符串中所有重复出现的某个字符或一组字符，或者找出以s开头且至少包含一个n的所有单词，又或者找出遵循雇员ID或社会安全号码结构的字符串。虽然可以使用String类，编写方法来完成这类处理，但这类方法编写起来比较繁琐。而使用System.Text.RegularExpressions名称空间中的类就比较简单，System.Text. RegularExpressions专门用于完成这类处理。
+
+## 9.1 .NET基类System.String
+
+使用运算符重载可以连接字符串。
+
+C#还允许使用类似于索引器的语法来提取指定的字符。
+
+这个类可以完成许多常见的任务，如替换字符、删除空白和把字母变成大写形式等。可用的方法如表所示。
+
+| 方法           | 作用                                                         |
+| -------------- | ------------------------------------------------------------ |
+| Compare        | 比较字符串的内容，考虑区域值背景（区域设置），判断某些字符是否相等 |
+| CompareOrdinal | 与Compare一样，但不考虑区域值背景                            |
+| Concat         | 把多个字符串实例合并为一个实例                               |
+| CopyTo         | 把从选定下标开始的特定数量字符复制到数组的一个全新实例中     |
+| Format         | 格式化包含各种值的字符串和如何格式化每个值的说明符           |
+| IndexOf        | 定位字符串中第一次出现某个给定子字符串或字符的位置           |
+| IndexOfAny     | 定位字符串中第一次出现某个字符或一组字符的位置               |
+| Insert         | 把一个字符串实例插入到另一个字符串实例的指定索引处           |
+| Join           | 合并字符串数组，创建一个新字符串                             |
+| LastIndexOf    | 与IndexOf一样，但定位最后一次出现的位置                      |
+| LastIndexOfAny | 与IndexOfAny一样，但定位最后一次出现的位置                   |
+| PadLeft        | 与IndexOf一样，但定位最后一次出现的位置                      |
+| PadRight       | 在字符串的右侧，通过添加指定的重复字符填充字符串             |
+| Replace        | 用另一个字符或子字符串替换字符串中给定的字符或子字符串       |
+| Split          | 在出现给定字符的地方，把字符串拆分为一个子字符串数组         |
+| Substring      | 在字符串中检索给定位置的子字符串                             |
+| ToLower        | 把字符串转换为小写形式                                       |
+| ToUpper        | 把字符串转换为大写形式                                       |
+| Trim           | 删除首尾的空白                                               |
+
+具体可参考：
+
+[String 类 (System) | Microsoft Docs](https://docs.microsoft.com/zh-cn/dotnet/api/system.string?view=net-6.0)
+
+C#提供了相当多便利的方法，在遇到一些常见的问题时，可以在使用前查查api。
+
+### 9.1.1 构建字符串
+
+**<u>*如上所述，String类是一个功能非常强大的类，它实现许多很有用的方法。但是，String类存在一个问题：重复修改给定的字符串，效率会很低，它实际上是一个不可变的数据类型，这意味着一旦对字符串对象进行了初始化，该字符串对象就不能改变了。*</u>**
+
+**<u>*表面上修改字符串内容的方法和运算符实际上是创建一个新字符串，根据需要，可以把旧字符串的内容复制到新字符串中。*</u>**
+
+一个示例：
+
+```C#
+string greetingText = "Hello from all the guys at Wrox Press. "; 
+greetingText += "We do hope you enjoy this book as much as we enjoyed writing it.";
+```
+
+在执行这段代码时，
+
+1. 首先创建一个System.String类型的对象，并把它初始化为文本“Hello from all the guys at Wrox Press.”，注意句号后面有一个空格。
+2. 此时.NET运行库会为该字符串分配足够的内存来保存这个文本（39个字符），再设置变量greetingText来表示这个字符串实例。
+
+3. 从语法上看，下一行代码是把更多的文本添加到字符串中。实际上并非如此，在此是创建一个新字符串实例，给它分配足够的内存，以存储合并的文本（共103个字符）。
+
+4. 把最初的文本“Hello from all the people at Wrox Press.”复制到这个新字符串中，再加上额外的文本“We do hope you enjoy this book as much as we enjoyed writing it.”。
+5. 然后更新存储在变量greetingText中的地址，使变量正确地指向新的字符串对象。现在没有引用旧的字符串对象——不再有变量引用它，下一次垃圾收集器清理应用程序中所有未使用的对象时，就会删除它。
+
+
+
+考虑以下场景:
+
+```C#
+print($"Not encoded:\n {greetingText}"); 
+for(int i = 'z'; i>= 'a'; i--) { 
+    char old1 = (char)i; 
+    char new1 = (char)(i+1); 
+    greetingText = greetingText.Replace(old1, new1); //引用替换
+} 
+for(int i = 'Z'; i>='A'; i--) { 
+    char old1 = (char)i; 
+    char new1 = (char)(i+1); 
+    greetingText = greetingText.Replace(old1, new1);//引用替换 
+} 
+print($"Encoded:\n {greetingText}");
+```
+
+**<u>*在本示例中，Replace（）方法以一种智能的方式工作，在某种程度上，它并没有创建一个新字符串(repalce实际上就返回了一个新对象的引用)，除非其实际上要对旧字符串进行某些改变。原来的字符串包含23个不同的小写字母和3个不同的大写字母。所以Replace（）分配一个新字符串，共计分配26次，每个新字符串都包含103个字符。因此加密过程需要在堆上有一个总共能存储2678个字符的字符串对象，该对象最终将等待被垃圾收集！显然，如果使用字符串频繁进行文字处理，应用程序就会遇到严重的性能问题。*</u>**
+
+
+
+为了解决这类问题，Microsoft提供了System.Text.StringBuilder类，StringBuilder类不像String类那样能够支持非常多的方法。在StringBuilder类上可以进行的处理仅限于替换和追加或删除字符串中的文本。但是，它的工作方式非常高效。
+
+**<u>*在使用String类构造一个字符串时，要给它分配足够的内存来保存字符串。然而，StringBuilder类通常分配的内存会比它需要的更多。开发人员可以选择指定StringBuilder要分配多少内存，但如果没有指定，在默认情况下就根据初始化StringBuilder实例时的字符串长度来确定所用内存的大小。*</u>**
+
+StringBuilder类有两个主要的属性：
+
+● Length指定包含字符串的实际长度。 ● Capacity指定字符串在分配的内存中的最大长度。
+
+对字符串的修改就在赋予StringBuilder实例的内存块中进行，这就大大提高了追加子字符串和替换单个字符的效率。删除或插入子字符串仍然效率低下，因为这需要移动随后的字符串部分。**<u>*只有执行扩展字符串容量的操作时，才需要给字符串分配新内存，这样才能移动包含的整个字符串。*</u>**在添加额外的容量时，从经验来看，如果StringBuilder类检测到容量超出，且没有设置新值，就会使自己的容量翻倍。
+
+```C#
+var greetingBuilder = new StringBuilder("Hello from all the guys at Wrox Press. ", 150); 
+greetingBuilder.AppendFormat("We do hope you enjoy this book as much " + "as we enjoyed writing it");
+
+// var greetingBuilder = new StringBuilder("Hello from all the guys at Wrox Press. ", 150); 
+// greetingBuilder.AppendFormat("We do hope you enjoy this book as much " + "as we enjoyed writing it"); 
+print("Not Encoded:\n" + greetingBuilder); 
+for(int i = 'z'; i>='a'; i--) { 
+    char old1 = (char)i; 
+    char new1 = (char)(i+1); 
+    greetingBuilder.Replace(old1, new1); 
+    //greetingBuilder = greetingBuilder.Replace(old1, new1); 
+} 
+for(int i = 'Z'; i>='A'; i--) { 
+    char old1 = (char)i; char new1 = (char)(i+1); 
+    greetingBuilder.Replace(old1, new1); 
+    //greetingBuilder = greetingBuilder.Replace(old1, new1); 
+} 
+print("Encoded:\n" + greetingBuilder);
+```
+
+StringBuilder，内存空间自己指定，只有在需要时扩展，再去申请内存。
+
+在调用AppendFormat（）方法时，其他文本就放在空的空间中，不需要分配更多的内存。
+
+对于replace 方法，不再复制字符串，而是在自己的内存位置进行修改。
+
+### 9.1.2 StringBuilder成员
+
+详细见：
+
+[StringBuilder 类 (System.Text) | Microsoft Docs](https://docs.microsoft.com/zh-cn/dotnet/api/system.text.stringbuilder?view=net-6.0)
+
+除了前面介绍的Length和Capacity属性外，还有一个只读属性MaxCapacity，它表示对给定的StringBuilder实例的容量限制。在默认情况下，这由int.MaxValue给定（大约20亿，如前所述）。但在构造StringBuilder对象时，也可以把这个值设置为较低的值。
+
+**<u>*不能把StringBuilder强制转换为String（隐式转换和显式转换都不行）。如果要把StringBuilder的内容输出为String，唯一的方式就是使用ToString（）方法。*</u>**
+
+ **<u>*前面介绍了StringBuilder类，说明了使用它提高性能的一些方式。但要注意，这个类并不总能提高性能。StringBuilder类基本上应在处理多个字符串时使用。但如果只是连接两个字符串，使用System.String类会比较好。*</u>**
+
+## 9.2 字符串格式
+
+**<u>*之前的章节介绍了用$前缀给字符串传递变量。本章讨论这个C# 6新功能背后的理论，并囊括格式化字符串提供的所有其他功能。*</u>**
+
+### 9.2.1 字符串插值
+
+*<u>C# 6引入了给字符串使用$前缀的字符串插值。下面的示例使用$前缀创建了字符串s2，**这个前缀允许在花括号中包含占位符来引用代码的结果。**</u>*
+
+```C#
+string s1 = "World"; string s2 = $"Hello, {s1}";
+```
+
+**<u>*在现实中，这只是语法糖。对于带$前缀的字符串，编译器创建String.Format方法的调用。所以前面的代码段解读为：*</u>**
+
+```C#
+string s1 = "World"; string s2 = String.Format("Hello, {0}", s1);
+```
+
+String.Format方法的第一个参数接受一个格式字符串，其中的占位符从0开始编号，其后是放入字符串空白处的参数。
+
+1. FormattableString
+
+   把字符串赋予FormattableString，**<u>*就很容易得到翻译过来的插值字符串*</u>**。插值字符串可以直接分配，因为FormattableString比正常的字符串更适合匹配。这个类型定义了Format属性（返回得到的格式字符串）、ArgumentCount属性和方法GetArgument（返回值）：
+
+   ```C#
+   int x = 3, y = 4; 
+   FormattableString s = $"The result of {x} + {y} is {x + y}"; 
+   print($"format: {s.Format }"); 
+   for (int i = 0; i < s.ArgumentCount ; i++) { 
+       print($"argument {i}: {s.GetArgument(i)} "); 
+   }
+   ```
+
+   输出：
+
+   ```C#
+   format: The result of {0} + {1} is {2}
+   argument 0: 3 
+   argument 1: 4 
+   argument 2: 7 
+   ```
+
+   **<u>*注意： 类FormattableString在System名称空间中定义，但是需要.NET 4.6。如果想在.NET旧版本中使用FormattableString，可以自己创建这种类型，或使用NuGet包StringInterpolationBridge。*</u>**
+
+   
+
+2. 给字符串插值使用其他区域值
+
+插值字符串默认使用当前的区域值，这很容易改变。辅助方法Invariant把插值字符串改为使用不变的区域值，而不是当前的区域值。因为插值字符串可以分配给FormattableString类型，所以它们可以传递给这个方法。FormattableString定义了允许传递IFormatProvider的ToString方法。接口IFormatProvider由CultureInfo类实现。把CultureInfo.InvariantCulture传递给IFormatProvider参数，就可把字符串改为使用不变的区域值：
+
+略过，和所处区域的时间表示格式有关。
+
+3. 转义花括号
+
+如果希望在插值字符串中包括花括号，可以使用两个花括号转义它们。
+
+可以转义花括号，从格式字符串中建立一个新的格式字符串。看看这个代码段：
+
+```C#
+string s = "Hello"; 
+print($"{{s}} displays the value of s: {s}");
+
+string formatString = $"{s}, {{0}}"; 
+//相当于
+//string formatString = String.Format("{0}, {{0}}", s);
+string s2 = "World"; 
+System.Console.WriteLine(formatString, s2);
+```
+
+ 
+
+### 9.2.2 日期时间与数字的格式
+
+除了给占位符使用字符串格式之外，还可以根据数据类型使用特定的格式。
+
+下面先从日期开始**<u>*。在占位符中，格式字符串跟在表达式的后面，用冒号隔开。*</u>**下面所示的例子是用于DateTime类型的D和d格式：
+
+```C#
+var day = new DateTime(2025, 2, 14); 
+WriteLine($"{day:D}"); 
+WriteLine($"{day:d}");
+WriteLine($"{day:dd-MMM-yyyy}");
+```
+
+时间的格式字符串详见:
+
+[标准日期和时间格式字符串 | Microsoft Docs](https://docs.microsoft.com/zh-cn/dotnet/standard/base-types/standard-date-and-time-format-strings)
+
+
+
+数字的格式字符串：
+
+[标准数字格式字符串 | Microsoft Docs](https://docs.microsoft.com/zh-cn/dotnet/standard/base-types/standard-numeric-format-strings)
+
+### 9.2.3 自定义字符串格式
+
+```C#
+public class Person : IFormattable { 
+    //方法 IFormattable => ToString(String, IFormatProvider)
+    public string FirstName { get; set; } 
+    public string LastName { get; set; } 
+    public override string ToString() => FirstName + " " + LastName; 
+    public virtual string ToString(string format) => ToString(format, null); 
+    public string ToString(string format, IFormatProvider formatProvider) { 
+        switch (format) { 
+            case null: 
+            case "A": return ToString(); 
+            case "F": return FirstName; 
+            case "L": return LastName; 
+            default: 
+                throw new FormatException($"invalid format string {format}"); 
+        } 
+    } 
+}
+
+public static void TestFormat4(){
+    var p1 = new Person { FirstName = "Stephanie", LastName = "Nagel" }; 
+    print(p1.ToString("F") );
+    print($"{p1:L}");// =>相当于 p1.ToString("L")
+}
+```
+
+格式字符串不限于内置类型，可以为自己的类型创建自定义格式字符串。为此，只需要实现接口IFormattable。
+
+有了这些代码（指的上述实现ToString(string format, IFormatProvider formatProvider)接口的代码），就可以明确传递格式字符串，或**<u>*隐式使用字符串插值*</u>**，以调用ToString方法。隐式的调用使用带两个参数的ToString方法。
+
+
+
+## 9.3 正则表达式
+
+### 9.3.1 正则表达式概述
+
+正则表达式语言是一种专门用于字符串处理的语言。它包含两个功能： 
+
+● 一组用于标识特殊字符类型的转义代码。你可能很熟悉DOS命令中使用\*字符表示任意子字符串（例如，DOS命令Dir Re\*会列出名称以Re开头的所有文件）。正则表达式使用与\*类似的许多序列来表示“任意一个字符”、“一个单词的中断”和“一个可选的字符”等。
+
+ ● 一个系统，在搜索操作中把子字符串和中间结果的各个部分组合起来。
+
+使用正则表达式，可以对字符串执行许多复杂而高级的操作，例如： 
+
+● 识别（可以是标记或删除）字符串中所有重复的单词，例如，把“The computer books books”转换为“The computer books”。 
+
+● 把所有单词都转换为标题格式，例如，把“this is a Title”转换为“This Is A Title”。 
+
+● 把长于3个字符的所有单词都转换为标题格式，例如，把“this is a Title”转换为“This is a Title”。
+
+● 确保句子有正确的大写形式。 
+
+● 区分URI的各个元素（例如，给定http://www.wrox.com， 提取出其中的协议、计算机名和文件名等）。
+
+当然，这些都是可以在C#中用System.String和System.Text.StringBuilder的各种方法执行的任务。但是，在一些情况下，还需要编写相当多的C#代码。
+
+**<u>*如果使用正则表达式，这些代码一般可以压缩为几行。*</u>** 实际上，这是实例化了一个对象System.Text.RegularExpressions.RegEx（甚至更简单，调用静态的RegEx（）方法），给它传递要处理的字符串和一个正则表达式（这是一个字符串，它包含用正则表达式语言编写的指令）。
+
+Watt撰写的图书Beginning Regular Expressions
+
+
+
+正则表达式的定义存在多种说法，具体如下。
+
+- 正则表达式就是用某种模式去匹配一类字符串的公式，主要用来描述字符串匹配的工具。
+- 正则表达式描述了一种字符串匹配的模式。它可以用来检查字符串中是否含有某种子串、将匹配的子串做替换或者从某个字符串中取出符合某个条件的子串等。
+- 正则表达式是由普通字符（如字符a~z）和特殊字符（称为元字符）组成的文字模式。
+- 正则表达式作为一个模板，将某个字符模式与所搜索的字符串进行匹配。
+- 正则表达式就是用于描述某些规则的工具，这些规则通常用于处理字符串中的查找或替换字符串。换句话说，正则表达式就是记录文本规则的代码。
+- 正则表达式就是用一个“字符串”来描述一个特征，然后去验证另一个“字符串”是否符合这个特征。
+
+### 9.3.2 正则表达式入门
+
+#### 理解元字符（Metacharacter）
+
+在正则表达式中，元字符（Metacharacter）是一类非常特殊的字符，它能够匹配一个位置或字符集合中的一个字符，如.、\w 等。
+
+根据功能，**<u>*元字符可分为两种类型：匹配位置的元字符和匹配字符的元字符。*</u>**
+
+##### 匹配位置的元字符
+
+匹配位置的元字符包括3 个字符：^、$和\b。其中，^（脱字符号，通常在文章中插入字时使用）和$（美元符号）只匹配一个位置，**<u>*它们分别匹配行的开始和结尾*</u>**。
+
+以下正则表达式**<u>*匹配以“String”开始的行*</u>**，即被匹配的行的第一个字符串为“String”。
+
+```
+^String
+```
+
+以下正则表达式**<u>*匹配以“String”结尾的行*</u>**，即被匹配的行的最后一个字符串为“String”。
+
+```
+String$
+```
+
+以下正则表达式***匹配一个空行***，该行中不包含任何字符串。
+
+```
+^$
+```
+
+ 以下正则表达式**<u>*匹配任意行*</u>**。该表达式只匹配行中的开始位置，因为任意行都包括其开始位
+置，所以该表达式将匹配任意行。
+
+```
+^
+```
+
+元字符\b 和^、$具有相似性，它也是匹配一个位置。\b 可以匹配单词的开始或结尾，即单词的分界处。通常情况下，英文单词之间往往由空格符号、标点符号或换行符号来分隔，**<u>*但是元字符\b 不匹配空格符号、标点符号和换行符号中的任何一个，它仅仅匹配一个位置。*</u>**
+
+以下正则表达式匹配**<u>*以“Str”开头*</u>**的字符串，如“String”、“String Format”等。
+
+```
+\bStr 
+```
+
+正则表达式\bStr 匹配的字符串必须以“Str”开头，并且“Str”之前是单词的分界处。正则表达式\bStr 不能描述或限定“Str”之后的字符串的形式。以下正则表达式匹配以“ing”结尾的字符串，如“String”、“This is a String”等。
+
+```
+ing\b
+```
+
+正则表达式ing\b 匹配的字符串必须以“ing”结尾，且“ing”之后是单词的分界处。以下正则表达式匹配一个完整的单词“String”。
+
+```
+\bString\b
+```
+
+*<u>**NOTE:在某些特定环境或语言下，还可以分别采用\\<和\\>来匹配单词的开始位置和结束位置。它们在效果上和元字符\b 等效，即都匹配单词的边界的两个位置，即开始位置和结束位置**</u>*
+
+**<u>*这些都是针对某一行的*</u>**
+
+##### 匹配字符的元字符
+
+匹配字符的元字符包括7 个字符：.（点号）、\w、\W、\s、\S、\d 和\D。其中，
+
+.（点号）匹配除换行符之外的任意字符；
+
+\w 匹配单词字符（包括字母、数字、下画线和汉字）；
+
+\W 匹配任意的非单词字符；
+
+\s 匹配任意的空白字符，如空格、制表符、换行符、中文全角空格等；
+
+\S 匹配任意的非空白字符；
+
+\d 匹配任意的数字；
+
+\D 匹配任意的非数字字符。
+
+eg:
+
+以下正则表达式匹配一个非空行，该行中可以包含除换行符之外的任意字符。(长度为1，表示只能有除换行符之外的任意一个字符)
+
+```
+^.$
+```
+
+以下正则表达式匹配一个非空行，且该行中只能包含字母、数字、下画线和汉字中的任意一个字符。
+
+```
+^\w$
+```
+
+以下正则表达式匹配以字母“a”开头的长度等于8 的任意单词。
+
+```
+\ba\w\w\w\w\w\w\w\b
+```
+
+以下正则表达式匹配以字母“a”开头、后跟随形如“3 个字符”＋“3 个字符”＋“1 个非数字字符”、长度等于8 的任意单词。
+
+```
+\ba\w\w\w\d\d\d\D\b
+```
+
+匹配字符串“ante123_”
+
+
+
+常用元字符
+
+| 字符 | 说明                                                       |
+| ---- | ---------------------------------------------------------- |
+| ^    | 匹配行的开始位置                                           |
+| $    | 匹配行的结束位置                                           |
+| \b   | 匹配单词的开始或结束位置. 匹配除换行符之外的任意字符       |
+| \w   | 匹配单词字符（包括字母、数字、下画线和汉字）               |
+| \W   | 匹配任意的非单词字符（包括字母、数字、下画线和汉字）       |
+| \s   | 匹配任意的空白字符，如空格、制表符、换行符、中文全角空格等 |
+| \S   | 匹配任意的非空白字符                                       |
+| \d   | 匹配任意的数字(0-9）                                       |
+| \D   | 匹配任意的非数字字符元(0-9除外的字符)                      |
+
+#### 文字匹配
+
+**<u>*在正则表达式中，元字符通常一次只能匹配一个位置或字符集合中的一个字符。*</u>**
+
+##### 字符类
+
+通常情况下，如果要匹配数字、字母、空白等字符时，可以直接使用与这些集合相对应的元字符。然而，如果要匹配的字符集合（如集合[0,1,2,3,4,5]）没有与之相对应的元字符时，则需要自定义匹配的字符集合。此时，可以使用字符类解决这个问题。字符类是一个字符集合，如果该字符集合中的任何一个字符被匹配，则它就会找到该匹配项。
+
+eg:
+
+以下正则表达式可以匹配任何数字（即0、1、2、3、4、5、6、7、8、9）。
+
+```
+[0123456789]
+```
+
+以下正则表达式匹配HTML 标记中的“\<H1>”、“\<H2\>”、“\<H3\>”、“\<H4\>”、“\<H5\>”或“\<H6\>”。
+
+```
+<H[123456]>
+```
+
+以下正则表达式匹配字符串“Jack”或者“jack”。
+
+```
+[Jj]ack
+```
+
+然而，正则表达式[0123456789]的书写非常不方便。**<u>*因此，正则表达式引入了连接符“-”来定义字符的范围。以下正则表达式等价于正则表达式[0123456789]。*</u>**
+
+以下正则表达式等价于正则表达式[0123456789]。以下正则表达式可以匹配任意小写字母。以下正则表达式可以匹配任意大写字母。
+
+```
+[0-9] 
+[a-z] 
+[A-Z]
+```
+
+注意：**<u>*当且仅当在字符类中的连接符“-”不是第一个字符时，它才具有特殊的含义*</u>**：它可以指定字符类的最大边界和最小边界之间的任何字符。它的具体含义由具体的字符类决定。因此，字符类的最大边界和最小边界，以及字符在ASCII 或Unicode 表中出现的顺序共同确定了连接符“-”指定的字符的范围。
+
+在字符类中，若字符“^”是字符类的第一个字符，则表示否定该字符类，即匹配除了该字符类之外的任意字符。
+
+以下正则表达式可以匹配任何非元音字符。
+
+```
+[^aAeEiIoOuU]
+```
+
+
+
+ 常用的字符类
+
+| 字符或表达式 | 说明                                                       |
+| ------------ | ---------------------------------------------------------- |
+| .            | 匹配除换行符之外的任意字符                                 |
+| \w           | 匹配单词字符（包括字母、数字、下画线和汉字）               |
+| \W           | 匹配任意的非单词字符（包括字母、数字、下画线和汉字）       |
+| \s           | 匹配任意的空白字符，如空格、制表符、换行符、中文全角空格等 |
+| \S           | 匹配任意的非空白字符                                       |
+| \d           | 匹配任意的数字                                             |
+| \D           | 匹配任意的非数字字符                                       |
+| [aeiou]      | 匹配字符集合中的任何字符                                   |
+| [0-9a-zA-Z]  | 匹配任何数字、字母（大写字母和小写字母）和下画线，等同于\w |
+| [^0-9a-zA-Z] | 匹配除任何数字、字母、下画线之外的任何字符，等同于\W       |
+| \p{name}     | 匹配{name}指定的命名字符类中的任何字符                     |
+| \P{name}     | 匹配除{name}指定的命名字符类中之外的任何字符               |
+
+**<u>*注意：表达式\p{name}和\P{name}为.NET Framework 所支持。*</u>**
+
+##### 字符转义
+
+正则表达式定义了一些特殊的元字符，如^、$、.等。**<u>*由于这些字符在正则表达式中被解释成其他的指定的意义，如果需要匹配这些字符，则需要使用字符转义来解决这一问题。转义字符为“\\”（反斜杠），它可以取消这些字符（如^、$、.等）在表达式中具有的特殊意义。*</u>**
+
+以下正则表达式匹配字符串“www.myweburl.com”。
+
+```
+www\.myweburl\.com
+```
+
+##### 反义
+
+在使用正则表达式时，如果需要匹配不在字符类指定范围内的字符时，可以使用反义规则。
+
+常用的反义表达式
+
+| 字符或表达式 | 说明                                                 |
+| ------------ | ---------------------------------------------------- |
+| \W           | 匹配任意的非单词字符（包括字母、数字、下画线和汉字） |
+| \S           | 匹配任意的非空白字符                                 |
+| \D           | 匹配任意的非数字字符                                 |
+| \B           | 匹配不是单词开头和结束的任何位置                     |
+| [^a]         | 匹配除字符a之外的任意字符                            |
+| [^aeiou]     | 匹配除字符集合（aeiou）中的字符之外的任意字符        |
+
+##### 限定符
+
+正则表达式的元字符一次一般只能匹配一个位置或一个字符，如果想要匹配零个、一个或多个字符时，则需要使用限定符。限定符用于指定允许特定字符或字符集自身重复出现的次数。
+
+**<u>*如{n}表示重复n 次、{n,}表示重复至少n 次、{n,m}表示重复至少n 次，最多m 次。*</u>**
+
+常用限定符
+
+| 字符或表达式 | 说明                                 |
+| ------------ | ------------------------------------ |
+| {n}          | 重复n次                              |
+| {n,}         | 重复至少n次                          |
+| {n,m}        | 重复至少n次，最多m次                 |
+| *            | 重复至少0次，等同于{0,}              |
+| +            | 重复至少1次，等同于{1,}              |
+| ?            | 重复0次或1次，等同于{0,1}            |
+| *?           | 尽可能少地使用重复的第一个匹配       |
+| +?           | 尽可能少地使用重复但至少使用一次     |
+| ??           | 使用零次重复（如有可能）或一次重复   |
+| {n}?         | 等同于{n}                            |
+| {n,}?        | 尽可能少地使用重复，但至少使用n次    |
+| {n,m}?       | 介于n次和m次之间、尽可能少地使用重复 |
+
+## 10 集合
+
