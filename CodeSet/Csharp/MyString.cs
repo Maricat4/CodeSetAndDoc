@@ -3,6 +3,8 @@ using System.Collections;
 using System;
 using System.Text;
 using System.Globalization;
+using System.Text.RegularExpressions;
+
 namespace MyString
 {
 
@@ -15,7 +17,8 @@ namespace MyString
             // TestFormat1();
             // TestFormat2();
             // TestFormat3();
-            TestFormat4();
+            // TestFormat4();
+            TestRex();
         }
 
         public static void print<T>(T o){
@@ -124,6 +127,47 @@ namespace MyString
             print($"{p1:L}");// =>相当于 p1.ToString("L")
 
         }
+
+        public static void TestRex(){
+
+            const string input = @"This book is perfect for both experienced C# programmers looking to " 
+            + "sharpen their skills and professional developers who are using C# for "
+            + "the first time. The authors deliver unparalleled coverage of " 
+            + "Visual Studio 2013 and .NET Framework 4.5.1 additions, as well as " 
+            + "new test-driven development and concurrent programming features. " 
+            + "Source code for all the examples are available for download, so you " 
+            + "can start writing Windows desktop, Windows Store apps, and ASP.NET " 
+            + "web applications immediately.";
+
+            Find1(input);
+
+
+        }
+
+        public static void Find1(string text) { 
+            const string pattern = @"ion.{3}"; 
+            //第三个参数是匹配选项
+            MatchCollection matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture); 
+            foreach (Match nextMatch in matches) { 
+                print(nextMatch.Value); 
+            } 
+        }
+
+        public static void WriteMatches(string text, MatchCollection matches) { 
+            print($"Original text was: \n\n{text}\n"); 
+            print($"No. of matches: {matches.Count}"); 
+            foreach (Match nextMatch in matches) { 
+                int index = nextMatch.Index; 
+                string result = nextMatch.ToString(); 
+                int charsBefore = (index < 5) ? index : 5; 
+                int fromEnd = text.Length - index - result.Length; 
+                int charsAfter = (fromEnd < 5) ? fromEnd : 5; 
+                int charsToDisplay = charsBefore + charsAfter + result.Length; 
+                print($"Index: {index}, \tString: {result}, \t" + "{text.Substring(index - charsBefore, charsToDisplay)}"); 
+            } 
+        }
+
+
     }
 
     public class Person : IFormattable { 
