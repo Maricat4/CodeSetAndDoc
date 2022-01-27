@@ -2820,5 +2820,117 @@ eg:
 \) 							#匹配最外层的右括号
 ```
 
-## 10 集合
+### 9.3.3 C#中的正则表达式
+
+首先解释下逐字字符串（在字符串前面跟一个@)
+
+当字符串文本包含反斜杠字符（例如在文件路径中）时，出于便捷性和更强的可读性的考虑，使用逐字字符串。 由于逐字字符串将新的行字符作为字符串文本的一部分保留，因此可将其用于初始化多行字符串。 使用双引号在逐字字符串内部嵌入引号。 下面的示例演示逐字字符串的一些常见用法：
+
+
+
+```csharp
+string filePath = @"C:\Users\scoleridge\Documents\";
+//Output: C:\Users\scoleridge\Documents\
+
+string text = @"My pensive SARA ! thy soft cheek reclined
+    Thus on mine arm, most soothing sweet it is
+    To sit beside our Cot,...";
+/* Output:
+My pensive SARA ! thy soft cheek reclined
+   Thus on mine arm, most soothing sweet it is
+   To sit beside our Cot,...
+*/
+
+string quote = @"Her name was ""Sara.""";
+//Output: Her name was "Sara."
+```
+
+
+
+C#中的正则表达式匹配选项
+
+|成员名|      说明|
+|----------|------------------|
+|CultureInvariant| 指定忽略字符串的区域值(与时间有关) |
+|IgnoreCase|     忽略输入字符串的大小写|
+|Multiline|修改字符^和$，把它们应用于每一行的开头和结尾，而不仅仅应用于整个字符串的开头和结尾|
+|RightToLeft|从右到左地读取输入字符串，而不是默认地从左到右读取（适合于一些亚洲语言或其他以这种方式读取的语言）|
+|Singleline|指定句点的含义（.），它原来表示单行模式，现在改为匹配每个字符|
+
+
+
+# 10 集合
+
+第6章介绍了数组和Array类实现的接口**<u>*。数组的大小是固定的。如果元素个数是动态的，就应使用集合类。*</u>** 
+
+List\<T\>是与数组相当的集合类。还有其他类型的集合：队列、栈、链表、字典和集。其他集合类提供的访问集合元素的API可能稍有不同，它们在内存中存储元素的内部结构也有区别。**<u>*本章将介绍所有的集合类和它们的区别，包括性能差异。*</u>**
+
+ **<u>*还可以了解在多线程中使用的位数组和并发集合。*</u>**
+
+## 10.1 集合接口和类型
+
+*<u>**大多数集合类都可在System.Collections和System.Collections.Generic名称空间中找到。**</u>*
+
+*<u>**泛型集合类位于System.Collections.Generic名称空间中；**</u>*
+
+*<u>**专用于特定类型的集合类位于System.Collections. Specialized名称空间中。**</u>*
+
+*<u>**线程安全的集合类位于System.Collections.Concurrent名称空间中。**</u>*
+
+*<u>**不可变的集合类在System.Collections.Immutable名称空间中。**</u>*
+
+
+
+当然，组合集合类还有其他方式。集合可以根据集合类实现的接口组合为列表、集合和字典。
+
+集合和列表实现的接口，如表所示。
+
+|接口|      说明|
+|------------------------|------------------------|
+|IEnumerable\<T\>|如果将foreach语句用于集合，就需要IEnumerable接口。这个接口定义了方法GetEnumerator（），它返回一个实现了IEnumerator接口的枚举|
+|ICollection\<T>|ICollection\<T>接口由泛型集合类实现。使用这个接口可以获得集合中的元素个数（Count属性），把集合复制到数组中（CopyTo（）方法），还可以从集合中添加和删除元素（Add（）、Remove（）、Clear（））|
+|IList\<T>|IList\<T>接口用于可通过位置访问其中的元素列表，这个接口定义了一个索引器，可以在集合的指定位置插入或删除某些项（Insert（）和RemoveAt（）方法）。IList<T>接口派生自ICollection\<T> 接口|
+|ISet\<T>|ISet\<T>接口由集实现。集允许合并不同的集，获得两个集的交集，检查两个集是否重叠。ISet\<T>接口派生自ICollection\<T> 接口|
+|IDictionary<TKey, TValue>|IDictionary<TKey, TValue>接口由包含键和值的泛型集合类实现。使用这个接口可以访问所有的键和值，使用键类型的索引器可以访问某些项，还可以添加或删除某些项|
+|ILookup<TKey, TValue>|ILookup<TKey, TValue>接口类似于IDictionary<TKey, TValue>接口，实现该接口的集合有键和值，且可以通过一个键包含多个值|
+|IEqualityComparer\<T>|接口IEqualityComparer\<T>由一个比较器实现，该比较器可用于字典中的键。使用这个接口，可以对对象进行相等性比较.|
+|IComparer\<T>|接口IComparer\<T>由比较器实现，通过Compare（）方法给集合中的元素排序|
+
+## 10.2 列表
+
+.NET Framework为动态列表提供了泛型类List\<T>。这个类实现了IList、ICollection、IEnumerable、IList\<T>、ICollection\<T>和IEnumerable\<T> 接口。
+
+### 10.2.1 创建
+
+**<u>*使用默认的构造函数创建一个空列表。元素添加到列表中后，列表的容量就会扩大为可接纳4个元素。如果添加了第5个元素，列表的大小就重新设置为包含8个元素。如果8个元素还不够，列表的大小就重新设置为包含16个元素。每次都会将列表的容量重新设置为原来的2倍。*</u>**
+
+**<u>*如果列表的容量改变了，整个集合就要重新分配到一个新的内存块中。*</u>**
+
+**<u>*在List\<T\>泛型类的实现代码中，使用了一个T类型的数组。通过重新分配内存，创建一个新数组，Array.Copy（）方法将旧数组中的元素复制到新数组中。*</u>**为节省时间，如果事先知道列表中元素的个数，就可以用构造函数定义其容量。下面创建了一个容量为10个元素的集合。如果该容量不足以容纳要添加的元素，就把集合的大小重新设置为包含20或40个元素，每次都是原来的2倍。
+
+#### 1. 集合初始值设定项
+
+还可以使用集合初始值设定项给集合赋值。使用集合初始值设定项，可以在初始化集合时，在花括号中给集合赋值：
+
+```C#
+var intList = new List<int>() {1, 2}; var stringList = new List<string>() {"one", "two"};
+```
+
+　 注意： 集合初始值设定项没有反映在已编译的程序集的IL代码中。**<u>*编译器会把集合初始值设定项转换成对初始值设定项列表中的每一项调用Add（）方法。*</u>**
+
+#### 2. 添加元素
+
+使用Add（）方法可以给列表添加元素，如下所示。实例化的泛型类型定义了Add（）方法的参数类型：
+
+
+
+#### 3. 插入元素
+
+#### 4. 访问元素
+
+#### 5. 删除元素
+
+#### 6. 搜索
+
+#### 7. 排序
 
