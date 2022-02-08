@@ -2920,17 +2920,186 @@ var intList = new List<int>() {1, 2}; var stringList = new List<string>() {"one"
 
 #### 2. 添加元素
 
-使用Add（）方法可以给列表添加元素，如下所示。实例化的泛型类型定义了Add（）方法的参数类型：
+使用Add（）方法可以给列表添加元素（添加一个），如下所示。实例化的泛型类型定义了Add（）方法的参数类型。
 
+使用List\<T\>类的AddRange（）方法，可以一次给集合添加多个元素。因为AddRange（）方法的参数是IEnumerable\<T\>类型的对象，所以也可以传递一个数组，如下所示： 
 
+```C#
+racers.AddRange(new Racer[] { new Racer(14, "Niki", "Lauda", "Austria", 25), new Racer(21, "Alain", "Prost", "France", 51)});
+```
+
+如果在实例化列表时知道集合的元素个数，就也可以将实现IEnumerable\<T\>类型的任意对象传递给类的构造函数。这非常类似于AddRange（）方法： 
+
+```C#
+var racers = new List<Racer>( new Racer[] { new Racer(12, "Jochen", "Rindt", "Austria", 6), new Racer(22, "Ayrton", "Senna", "Brazil", 41) });
+```
+
+可以查查看相关方法的接口。
 
 #### 3. 插入元素
 
+使用Insert（）方法可以在指定位置插入元素： 
+
+```C#
+racers.Insert(3, new Racer(6, "Phil", "Hill", "USA", 3)); 
+```
+
+方法InsertRange（）提供了插入大量元素的功能，类似于前面的AddRange（）方法。
+
 #### 4. 访问元素
+
+实现了IList和IList\<T\>接口的所有类都提供了一个索引器，所以可以使用索引器，通过传递元素号来访问元素。第一个元素可以用索引值0来访问。指定racers[3]，可以访问列表中的第4个元素： 
+
+```C#
+Racer r1 = racers[3]; 
+```
+
+可以使用Count属性确定元素个数，再使用for循环遍历集合中的每个元素，并使用索引器访问每一项：
+
+```C#
+for (int i = 0; i < racers.Count; i++) { WriteLine(racers[i]); }
+```
+
+因为List\<T\>集合类实现了IEnumerable接口，所以也可以使用foreach语句遍历集合中的元素。
+
+```C#
+foreach (var r in racers) { WriteLine(r); }
+```
+
+
 
 #### 5. 删除元素
 
+删除元素时，可以利用索引，也可以传递要删除的元素。下面的代码把3传递给RemoveAt（）方法，删除第4个元素：
+
+```C#
+ racers.RemoveAt(3);
+```
+
+**<u>*也可以直接将Racer对象传送给Remove（）方法，*</u>**来删除这个元素。按索引删除比较快，因为必须在集合中搜索要删除的元素。Remove（）方法先在集合中搜索，用IndexOf（）方法获取元素的索引，再使用该索引删除元素。**<u>*IndexOf（）方法先检查元素类型是否实现了IEquatable\<T\>接口。如果是，就调用这个接口的Equals（）方法，确定集合中的元素是否等于传递给Equals（）方法的元素。如果没有实现这个接口，就使用Object类的Equals（）方法比较这些元素。Object类中Equals（）方法的默认实现代码对值类型进行按位比较，对引用类型只比较其引用。*</u>**
+
+
+
+RemoveRange（）方法可以从集合中删除许多元素。它的第一个参数指定了开始删除的元素索引，第二个参数指定了要删除的元素个数。
+
+```C#
+int index = 3; int count = 5; racers.RemoveRange(index, count);
+```
+
 #### 6. 搜索
 
+有不同的方式在集合中搜索元素。可以获得要查找的元素的索引，或者搜索元素本身。可以使用的方法有IndexOf（）、LastIndexOf（）、FindIndex（）、FindLastIndex（）、Find（）和FindLast（）。**如果只检查元素是否存在，List\<T\>类就提供了Exists（）方法。**
+
+IndexOf（）方法需要将一个对象作为参数，如果在集合中找到该元素，这个方法就返回该元素的索引。如果没有找到该元素，就返回-1。**<u>*IndexOf（）方法使用IEquatable\<T\>接口来比较元素。*</u>**
+
+使用IndexOf（）方法，还可以指定不需要搜索整个集合，但必须指定从哪个索引开始搜索以及比较时要迭代的元素个数。
+
+除了使用IndexOf（）方法搜索指定的元素之外，还可以搜索有某个特性的元素，该特性可以用FindIndex（）方法来定义。FindIndex（）方法需要一个Predicate类型的参数： 
+
+```C#
+public int FindIndex(Predicate<T> match);
+```
+
+Predicate\<T\>类型是一个委托，该委托返回一个布尔值，并且需要把类型T作为参数。如果Predicate\<T\>委托返回true，就表示有一个匹配元素，并且找到了相应的元素。如果它返回false，就表示没有找到元素，搜索将继续。
+
+```C#
+public delegate bool Predicate<T>(T obj);
+```
+
+要获得与Predicate\<T\>类型匹配的所有项，而不是一项，可以使用FindAll（）方法。FindAll（）方法使用的Predicate\<T\>委托与Find（）和FindIndex（）方法相同。FindAll（）方法在找到第一项后，不会停止搜索，而是继续迭代集合中的每一项，并返回Predicate\<T\>类型是true的所有项。
+
+
+
 #### 7. 排序
+
+List\<T\>类可以使用Sort（）方法对元素排序。Sort（）方法使用快速排序算法，比较所有的元素，直到整个列表排好序为止。
+
+Sort（）方法使用了几个重载的方法。可以传递给它的参数有泛型委托Comparison<T>和泛型接口IComparer<T>，以及一个范围值和泛型接口IComparer\<T\> 。
+
+```C#
+public void List<T>.Sort(); 
+public void List<T>.Sort(Comparison<T>); //委托
+public void List<T>.Sort(IComparer<T>); //接口
+public void List<T>.Sort(Int32, Int32, IComparer<T>);
+```
+
+如果需要按照元素类型不默认支持的方式排序，就应使用其他技术，例如，传递一个实现了IComparer\<T\>接口的对象。
+
+```C#
+public class RacerComparer : IComparer<Racer> { 
+    public enum CompareType { 
+        FirstName, 
+        LastName, 
+        Country, 
+        Wins 
+    } 
+    private CompareType _compareType; 
+    public RacerComparer(CompareType compareType) { _compareType = compareType; } 
+    public int Compare(Racer x, Racer y) { 
+        if (x == null && y == null) return 0; 
+        if (x == null) return -1; 
+        if (y == null) return 1; 
+        int result; 
+        switch (_compareType) { 
+            case CompareType.FirstName: 
+                return string.Compare(x.FirstName, y.FirstName); 
+            case CompareType.LastName: 
+                return string.Compare(x.LastName, y.LastName); 
+            case CompareType.Country: 
+                result = string.Compare(x.Country, y.Country); 
+                if (result == 0) return string.Compare(x.LastName, y.LastName); 
+                else return result; 
+            case CompareType.Wins: return x.Wins.CompareTo(y.Wins); 
+            default: throw new ArgumentException("Invalid Compare Type"); 
+        } 
+    } 
+}
+```
+
+### 10.2.2 只读集合
+
+创建集合后，它们就是可读写的，否则就不能给它们填充值了。但是，在填充完集合后，可以创建只读集合。List<T>集合的AsReadOnly（）方法返回ReadOnlyCollection\<T\>类型的对象。
+
+ReadOnlyCollection\<T\>类实现的接口与List\<T\>集合相同，但所有修改集合的方法和属性都抛出NotSupportedException异常。除了List\<T\>的接口之外，ReadOnlyCollection\<T\>还实现了IReadOnlyCollection\<T\>和IReadOnlyList\<T\>接口。因为这些接口的成员，集合不能修改。
+
+## 10.3 队列
+
+队列使用System.Collections.Generic名称空间中的泛型类Queue\<T\>实现。在内部，Queue\<T\>类使用T类型的数组，这类似于List\<T\>类型。它实现ICollection和IEnumerable\<T\>接口，但没有实现ICollection\<T\>接口，因为这个接口定义的Add（）和Remove（）方法不能用于队列。
+
+因为Queue\<T\>类没有实现IList\<T\>接口，所以不能用索引器访问队列。队列只允许在队列中添加元素，该元素会放在队列的尾部（使用Enqueue（）方法），从队列的头部获取元素（使用Dequeue（）方法）。
+
+
+
+
+|Queue\<T\>类的成员|说明|
+|----------------|---|
+|Count|Count属性返回队列中的元素个数|
+|Enqueue|Enqueue（）方法在队列一端添加一个元素|
+|Dequeue|Dequeue（）方法在队列的头部读取和删除元素。如果在调用Dequeue（）方法时，队列中不再有元素，就抛出一个InvalidOperationException类型的异常|
+|Peek|Peek（）方法从队列的头部读取一个元素，但不删除它|
+|TrimExcess|TrimExcess（）方法重新设置队列的容量。Dequeue（）方法从队列中删除元素，但它不会重新设置队列的容量。要从队列的头部去除空元素，应使用TrimExcess（）方法|
+
+## 10.4 栈
+
+与Queue\<T>类相似，Stack\<T\>类实现IEnumerable\<T\>和ICollection接口。
+
+|Stack\<T\>类的成员|说明|
+|---------------|----|
+|Count|返回栈中的元素个数|
+|Push|在栈顶添加一个元素|
+|Pop|从栈顶删除一个元素，并返回该元素。如果栈是空的，就抛出InvalidOperationException异常|
+|Peek|返回栈顶的元素，但不删除它|
+|Contains|确定某个元素是否在栈中，如果是，就返回true|
+
+## 10.5 链表
+
+
+
+10.6 有序列表
+
+10.7 字典
+
+10.8 集
+
+
 
