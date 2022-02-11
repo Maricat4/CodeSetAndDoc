@@ -3093,13 +3093,112 @@ ReadOnlyCollection\<T\>类实现的接口与List\<T\>集合相同，但所有修
 
 ## 10.5 链表
 
+双向链表
+
+LinkedList\<T\>是一个双向链表，其元素指向它前面和后面的元素。
+
+链表不能在列表中仅存储元素。存储元素时，链表还必须存储每个元素的下一个元素和上一个元素的信息。这就是LinkedList\<T\>包含LinkedListNode\<T\>类型的元素的原因。使用LinkedListNode\<T\>类，可以获得列表中的下一个元素和上一个元素。LinkedListNode\<T\>定义了属性List、Next、Previous和Value。
+
+List属性返回与节点相关的LinkedList\<T\>对象，Next和Previous属性用于遍历链表，访问当前节点之后和之前的节点。Value返回与节点相关的元素，其类型是T。
+
+ 
 
 
-10.6 有序列表
 
-10.7 字典
+## 10.6 有序列表
 
-10.8 集
+如果需要基于键对所需集合排序，就可以使用SortedList<TKey, TValue>类。这个类按照键给元素排序。这个集合中的值和键都可以使用任意类型。**<u>*使用重载的构造函数，可以定义列表的容量，传递实现了IComparer\<TKey\>接口的对象，该接口用于给列表中的元素排序。*</u>**
+
+[美] Christian Nagel. C#高级编程(第10版) C# 6 & .NET Core 1.0 (Kindle 位置 8121-8122). 清华大学出版社. Kindle 版本. 
+
+***<u>注意： SortedList<TKey, TValue>类只允许每个键有一个对应的值，如果需要每个键对应多个值，就可以使用Lookup<TKey, TElement> 类。</u>***
+
+可以使用foreach语句遍历该列表。枚举器返回的元素是KeyValuePair<TKey, TValue>类型，其中包含了键和值。键可以用Key属性访问，值可以用Value属性访问。
+
+```C#
+foreach (KeyValuePair<string, string> book in books) { WriteLine($"{book.Key}, {book.Value}"); }
+```
+
+也可以使用Values和Keys属性访问值和键。因为Values属性返回IList\<TValue\>, Keys属性返回IList\<TKey\>，所以可以通过foreach语句使用这些属性：
+
+```C#
+foreach (string isbn in books.Values) { WriteLine(isbn); } 
+foreach (string title in books.Keys)  { WriteLine(title);}
+```
+
+
+
+## 10.7 字典
+
+字典表示一种非常复杂的数据结构，这种数据结构允许按照某个键来访问元素。字典也称为映射或散列表。字典的主要特性是能根据键快速查找值。也可以自由添加和删除元素，这有点像List\<T\>类，但没有在内存中移动后续元素的性能开销。
+
+.NET Framework提供了几个字典类。可以使用的最主要的类是Dictionary<TKey, TValue> 。
+
+### 10.7.1 字典初始化器
+
+C# 6定义了一个新的语法，在声明时初始化字典。带有int键和string值的字典可以初始化如下：
+
+```C#
+var dict = new Dictionary<int, string>() { [3] = "three", [7] = "seven" };
+```
+
+这里把两个元素添加到字典中。第一个元素的键是3，字符串值是three；第二个元素的键是7，字符串值是seven。这个初始化语法易于阅读，使用的语法与访问字典中的元素相同。
+
+### 10.7.2 键的类型
+
+**<u>*用作字典中键的类型必须重写Object类的GetHashCode（）方法。只要字典类需要确定元素的位置，它就要调用GetHashCode（）方法。GetHashCode（）方法返回的int由字典用于计算在对应位置放置元素的索引。这里不介绍这个算法。我们只需要知道，它涉及素数，所以字典的容量是一个素数。*</u>**
+
+
+
+GetHashCode（）方法的实现代码必须满足如下要求：
+
+● 相同的对象应总是返回相同的值。 
+● 不同的对象可以返回相同的值。 
+● 它不能抛出异常。 
+● 它应至少使用一个实例字段。 
+● 散列代码最好在对象的生存期中不发生变化。 除了GetHashCode（）方法的实现代码必须满足的要求之外，最好还满足如下要求： ● 它应执行得比较快，计算的开销不大。 ● 散列代码值应平均分布在int可以存储的整个数字范围上。
+
+**<u>*注意： 字典的性能取决于GetHashCode（）方法的实现代码。*</u>**
+
+### 10.7.3 字典示例
+
+略
+
+### 10.7.4 Lookup类
+
+Dictionary<TKey, TValue>类支持每个键关联一个值。Lookup<TKey, TElement>类非常类似于Dictionary<TKey, TValue>类，但把键映射到一个值集合上。这个类在程序集System.Core中实现，用System.Linq名称空间定义。
+
+**<u>*Lookup<TKey, TElement>类不能像一般的字典那样创建，而必须调用ToLookup（）方法，该方法返回一个Lookup<TKey, TElement>对象。*</u>**ToLookup（）方法是一个扩展方法，它可以用于实现IEnumerable\<T\>接口的所有类。在下面的例子中，填充了一个Racer对象列表。因为List\<T\>类实现了IEnumerable\<T\>接口，所以可以在赛车手列表上调用ToLookup（）方法。这个方法需要一个Func<TSource, TKey>类型的委托，Func<TSource, TKey>类型定义了键的选择器。这里使用lambda表达式r => r.Country，根据国家来选择赛车手。foreach循环只使用索引器访问来自澳大利亚的赛车手。
+
+```C#
+var racers = new List<Racer>(); 
+racers.Add(new Racer("Jacques", "Villeneuve", "Canada", 11)); 
+racers.Add(new Racer("Alan", "Jones", "Australia", 12)); 
+racers.Add(new Racer("Jackie", "Stewart", "United Kingdom", 27)); 
+racers.Add(new Racer("James", "Hunt", "United Kingdom", 10)); 
+racers.Add(new Racer("Jack", "Brabham", "Australia", 14)); 
+var lookupRacers = racers.ToLookup(r => r.Country); 
+foreach (Racer r in lookupRacers["Australia"]) { WriteLine(r); }
+```
+
+### 10.7.5 有序字典
+
+SortedDictionary<TKey, TValue>是一个二叉搜索树，其中的元素根据键来排序。该键类型必须实现IComparable\<TKey\>接口。如果键的类型不能排序，则还可以创建一个实现了IComparer \<TKey\>接口的比较器，将比较器用作有序字典的构造函数的一个参数。
+
+SortedDictionary<TKey, TValue>和SortedList<TKey, TValue>的功能类似。但因为SortedList<TKey, TValue>实现为一个基于数组的列表，而SortedDictionary<TKey, TValue>类实现为一个字典，所以它们有不同的特征。
+
+● SortedList<TKey, TValue>使用的内存比SortedDictionary<TKey, TValue> 少。
+● SortedDictionary<TKey, TValue>的元素插入和删除操作比较快。 
+● 在用已排好序的数据填充集合时，若不需要修改容量，SortedList<TKey, TValue>就比较快。
+
+## 10.8 集
+
+包含不重复元素的集合称为“集（set）”。.NET Framework包含两个集（HashSet\<T\>和SortedSet\<T\>），它们都实现ISet\<T\>接口。HashSet\<T\>集包含不重复元素的无序列表，SortedSet\<T\>集包含不重复元素的有序列表。
+**<u>*ISet\<T\>接口提供的方法可以创建合集、交集，或者给出一个集是另一个集的超集或子集的信息。*</u>**
+
+## 10.9 性能
+
+略，时空复杂度分析。
 
 
 
